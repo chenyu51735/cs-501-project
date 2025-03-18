@@ -13,3 +13,6 @@ Imagine exploring a new city and instantly uncovering its hidden stories, turnin
 ## Multi-Device
 - Smartphones
 - Smartwatches 
+## Collaborators
+- Sukie Zhang
+- Yu Chen (kane@bu.edu)
