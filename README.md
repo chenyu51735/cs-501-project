@@ -13,7 +13,10 @@ We want our app to make travel more engaging and culturally rich through leverag
 - Camera for photo uploads
 ## Multi-Device
 - Smartphones
-- Smartwatches 
+- Smartwatches
+## Wireframe
+<img width="714" alt="image" src="https://github.com/user-attachments/assets/d5fd9609-8d3f-4f6e-afb9-c1fbc168abd0" />
+
 ## Collaborators
 - Sukie Zhang
 - Yu Chen (kane@bu.edu)
