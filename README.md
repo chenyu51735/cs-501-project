@@ -15,7 +15,12 @@ We want our app to make travel more engaging and culturally rich through leverag
 - Smartphones
 - Smartwatches
 ## Wireframe
+- Smartphone
 <img width="714" alt="image" src="https://github.com/user-attachments/assets/d5fd9609-8d3f-4f6e-afb9-c1fbc168abd0" />
+
+- Smartwatch
+<img width="714" alt="image" src="https://github.com/user-attachments/assets/95bc6a0b-910f-4cf5-9b8f-741fa6bf91db" />
+
 
 ## Collaborators
 - Sukie Zhang
