@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.cs501_project.ui.TravelApp
+import com.example.cs501_project.ui.LoginForm
 import com.example.cs501_project.ui.theme.Cs501projectTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +14,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Cs501projectTheme {
-                    TravelApp()
+                    //TravelApp()
+                LoginForm()
             }
         }
     }
