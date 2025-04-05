@@ -9,47 +9,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.room.Dao
-import androidx.room.Database
-import androidx.room.Delete
-import androidx.room.Entity
-import androidx.room.Insert
-import androidx.room.PrimaryKey
-import androidx.room.Query
-import androidx.room.RoomDatabase
-import kotlinx.coroutines.flow.Flow
-
-// user class, will prompt user for full name, username, and password
-@Entity(tableName = "users")
-data class User(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val fullName: String,
-    val username: String,
-    val password: String,
-)
-
-// data access object, defining all functions to be used on database
-@Dao
-interface UserDao {
-    @Query("SELECT * FROM users ORDER BY id")
-    fun getAll(): Flow<List<User>> // will retrieve all users
-
-    @Insert
-    suspend fun insert(user: User)
-
-    @Delete
-    suspend fun delete(user: User)
-}
-
-// setting up the room database for users
-@Database(entities = [User::class], version = 1)
-abstract class AppDatabase : RoomDatabase() {
-    abstract fun userDao(): UserDao
-}
+import androidx.compose.ui.unit.sp
+import com.example.cs501_project.viewmodel.UserViewModel
+import kotlinx.coroutines.launch
 
 @Composable
-fun LoginForm() {
+fun LoginForm(viewModel: UserViewModel) {
+    val scope = rememberCoroutineScope() // for launching coroutines
+    val users by viewModel.users.collectAsState(initial = emptyList()) // observing user list
+
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -60,6 +30,11 @@ fun LoginForm() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Text(
+            text = "Login",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
@@ -72,10 +47,21 @@ fun LoginForm() {
             label = { Text("Password") }
         )
 
-        Row {
+        Row(
+            modifier = Modifier.padding(8.dp)
+        ) {
             // login button and functionality
             Button(onClick = {
                 // check if the account exists
+                // if it does not exist, pop up a DNE and to create an account
+                // if it does, success! login
+                scope.launch {
+                    val user = users.find { it.username === username } // attempting to find user by username
+                    if (user != null && user.password === password) {
+                        // login successful!
+                        // navigate to their main screen
+                    }
+                }
             }) {
                 Text(text = "Login")
             }
