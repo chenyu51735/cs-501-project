@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.support.annotations)
     implementation(libs.androidx.annotation)
+    implementation(libs.androidx.storage)
 
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

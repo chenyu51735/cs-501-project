@@ -13,10 +13,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cs501_project.viewmodel.UserViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginForm(viewModel: UserViewModel) {
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope() // for launching coroutines
     val users by viewModel.users.collectAsState(initial = emptyList()) // observing user list
 
@@ -52,14 +55,26 @@ fun LoginForm(viewModel: UserViewModel) {
         ) {
             // login button and functionality
             Button(onClick = {
-                // check if the account exists
-                // if it does not exist, pop up a DNE and to create an account
-                // if it does, success! login
                 scope.launch {
                     val user = users.find { it.username === username } // attempting to find user by username
                     if (user != null && user.password === password) {
                         // login successful!
                         // navigate to their main screen
+                        CoroutineScope(Dispatchers.Main).launch {
+                            snackbarHostState.showSnackbar("Login successful")
+                        }
+                    }
+                    if (user != null && user.password !== password) {
+                        // wrong password sorrryryy
+                        CoroutineScope(Dispatchers.Main).launch {
+                            snackbarHostState.showSnackbar("Password is incorrect, please try again")
+                        }
+                    }
+                    if (user == null) {
+                        // user does not exist, wrong username? or create account
+                        CoroutineScope(Dispatchers.Main).launch {
+                            snackbarHostState.showSnackbar("Username does not exist")
+                        }
                     }
                 }
             }) {
@@ -68,7 +83,7 @@ fun LoginForm(viewModel: UserViewModel) {
 
             // new create account and functionality
             TextButton(onClick = {
-                // bring to a new screen if they are new
+                // navigate to CreateAccount.kt
             }) {
                 Text(text = "New here?")
             }

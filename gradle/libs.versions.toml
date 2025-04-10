@@ -20,6 +20,7 @@ roomCompiler = "2.6.1"
 roomKtx = "2.6.1"
 supportAnnotations = "28.0.0"
 annotation = "1.9.1"
+storage = "1.5.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -50,6 +51,7 @@ androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", 
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 support-annotations = { group = "com.android.support", name = "support-annotations", version.ref = "supportAnnotations" }
 androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
+androidx-storage = { group = "androidx.test.services", name = "storage", version.ref = "storage" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
