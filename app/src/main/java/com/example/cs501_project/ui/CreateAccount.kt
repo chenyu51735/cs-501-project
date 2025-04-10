@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ fun CreateAccount(viewModel: UserViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        SnackbarHost(hostState = snackbarHostState)
         Text(
             text = "Welcome to Timeless Trails!",
             fontSize = 24.sp,
@@ -64,7 +66,7 @@ fun CreateAccount(viewModel: UserViewModel) {
         Button( onClick = {
             // want to check if username already exists
             scope.launch {
-                val user = users.find { it.username === newUsername } // attempting to find user by username
+                val user = users.find { it.username == newUsername } // attempting to find user by username
                 if (user != null) {
                     // username is already taken
                     CoroutineScope(Dispatchers.Main).launch {

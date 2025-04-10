@@ -56,15 +56,15 @@ fun LoginForm(viewModel: UserViewModel) {
             // login button and functionality
             Button(onClick = {
                 scope.launch {
-                    val user = users.find { it.username === username } // attempting to find user by username
-                    if (user != null && user.password === password) {
+                    val user = users.find { it.username == username } // attempting to find user by username
+                    if (user != null && user.password == password) {
                         // login successful!
                         // navigate to their main screen
                         CoroutineScope(Dispatchers.Main).launch {
                             snackbarHostState.showSnackbar("Login successful")
                         }
                     }
-                    if (user != null && user.password !== password) {
+                    if (user != null && user.password != password) {
                         // wrong password sorrryryy
                         CoroutineScope(Dispatchers.Main).launch {
                             snackbarHostState.showSnackbar("Password is incorrect, please try again")

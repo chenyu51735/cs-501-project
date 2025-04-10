@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.ViewModelProvider
 import com.example.cs501_project.ui.TravelApp
 import com.example.cs501_project.ui.LoginForm
+import com.example.cs501_project.ui.CreateAccount
 import com.example.cs501_project.ui.theme.Cs501projectTheme
 import com.example.cs501_project.viewmodel.UserViewModel
 
@@ -19,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             Cs501projectTheme {
                     //TravelApp()
-                LoginForm(viewModel = viewModel)
+                CreateAccount(viewModel = viewModel)
             }
         }
     }
