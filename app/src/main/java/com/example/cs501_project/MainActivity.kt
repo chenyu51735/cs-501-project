@@ -21,7 +21,6 @@ class MainActivity : ComponentActivity() {
         viewModel = ViewModelProvider(this)[UserViewModel::class.java]
         setContent {
             Cs501projectTheme {
-                    //TravelApp()
                 navController = rememberNavController()
                 AppNavigation(navController = navController, viewModel = viewModel)
             }
