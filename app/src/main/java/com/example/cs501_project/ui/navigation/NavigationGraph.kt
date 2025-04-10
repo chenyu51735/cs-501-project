@@ -21,11 +21,11 @@ fun AppNavigation(navController: NavHostController, viewModel: UserViewModel) {
         }
 
         composable(route = "login") {
-            LoginForm(viewModel = viewModel, onNavigate = { navController.navigate("createAccount") })
+            LoginForm(viewModel = viewModel, onNavigateToCreateAccount = { navController.navigate("createAccount") })
         }
 
         composable(route = "createAccount") {
-            CreateAccount(viewModel = viewModel, onNavigate = {navController.popBackStack() })
+            CreateAccount(viewModel = viewModel, onNavigateToLogin = { navController.popBackStack() })
         }
 
     }

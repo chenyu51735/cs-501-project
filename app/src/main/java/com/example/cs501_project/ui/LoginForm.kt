@@ -3,7 +3,7 @@ package com.example.cs501_project.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,7 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun LoginForm(viewModel: UserViewModel, onNavigate: () -> Unit) {
+fun LoginForm(viewModel: UserViewModel, onNavigateToCreateAccount: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope() // for launching coroutines
     val users by viewModel.users.collectAsState(initial = emptyList()) // observing user list
@@ -29,7 +29,7 @@ fun LoginForm(viewModel: UserViewModel, onNavigate: () -> Unit) {
     Column(
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxWidth(),
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -65,7 +65,7 @@ fun LoginForm(viewModel: UserViewModel, onNavigate: () -> Unit) {
                         }
                     }
                     if (user != null && user.password != password) {
-                        // wrong password sorrryryy
+                        // wrong password
                         CoroutineScope(Dispatchers.Main).launch {
                             snackbarHostState.showSnackbar("Password is incorrect, please try again")
                         }
@@ -81,10 +81,9 @@ fun LoginForm(viewModel: UserViewModel, onNavigate: () -> Unit) {
                 Text(text = "Login")
             }
 
-            // new create account and functionality
             TextButton(onClick = {
                 // navigate to CreateAccount.kt
-                onNavigate()
+                onNavigateToCreateAccount()
             }) {
                 Text(text = "New here?")
             }
