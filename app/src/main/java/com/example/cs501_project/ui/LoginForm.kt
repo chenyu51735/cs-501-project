@@ -18,7 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun LoginForm(viewModel: UserViewModel) {
+fun LoginForm(viewModel: UserViewModel, onNavigate: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope() // for launching coroutines
     val users by viewModel.users.collectAsState(initial = emptyList()) // observing user list
@@ -84,6 +84,7 @@ fun LoginForm(viewModel: UserViewModel) {
             // new create account and functionality
             TextButton(onClick = {
                 // navigate to CreateAccount.kt
+                onNavigate()
             }) {
                 Text(text = "New here?")
             }

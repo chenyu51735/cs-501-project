@@ -27,7 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun CreateAccount(viewModel: UserViewModel) {
+fun CreateAccount(viewModel: UserViewModel, onNavigate: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
     // will take in viewmodel as a parameter from its call from LoginForm.kt to ensure data persistence
     val scope = rememberCoroutineScope()

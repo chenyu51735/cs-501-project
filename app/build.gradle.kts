@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.support.annotations)
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.storage)
+    implementation(libs.androidx.navigation.compose)
 
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
