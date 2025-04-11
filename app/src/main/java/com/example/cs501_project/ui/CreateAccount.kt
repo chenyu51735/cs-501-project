@@ -2,7 +2,8 @@ package com.example.cs501_project.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
@@ -24,10 +25,11 @@ import androidx.compose.ui.unit.sp
 import com.example.cs501_project.viewmodel.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun CreateAccount(viewModel: UserViewModel) {
+fun CreateAccount(viewModel: UserViewModel, onNavigateToLogin: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
     // will take in viewmodel as a parameter from its call from LoginForm.kt to ensure data persistence
     val scope = rememberCoroutineScope()
@@ -39,7 +41,7 @@ fun CreateAccount(viewModel: UserViewModel) {
     Column(
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxWidth(),
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -62,27 +64,33 @@ fun CreateAccount(viewModel: UserViewModel) {
             label = { Text("Enter a Password") }
         )
 
-        // create account button
-        Button( onClick = {
-            // want to check if username already exists
-            scope.launch {
-                val user = users.find { it.username == newUsername } // attempting to find user by username
-                if (user != null) {
-                    // username is already taken
-                    CoroutineScope(Dispatchers.Main).launch {
-                        snackbarHostState.showSnackbar("Username already exists - please enter a new username")
-                    }
-                } else {
-                    // username is not taken, successfully created account
-                    viewModel.addUser(newUsername, newPassword) // adding to the view model
-                    CoroutineScope(Dispatchers.Main).launch {
-                        snackbarHostState.showSnackbar("Account successfully created, please go back to login with your new credentials")
+        Row(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            // create account button
+            Button( onClick = {
+                // want to check if username already exists
+                scope.launch {
+                    val user = users.find { it.username == newUsername } // attempting to find user by username
+                    if (user != null) {
+                        // username is already taken
+                        CoroutineScope(Dispatchers.Main).launch {
+                            snackbarHostState.showSnackbar("Username already exists - please enter a new username")
+                        }
+                    } else {
+                        // username is not taken, successfully created account
+                        viewModel.addUser(newUsername, newPassword) // adding to the view model
+                        CoroutineScope(Dispatchers.Main).launch {
+                            snackbarHostState.showSnackbar("Account successfully created, redirecting you back to login")
+                            delay(5000)
+                        }
+                        onNavigateToLogin()
                     }
                 }
             }
-        }
-        ) {
-            Text(text = "Create")
+            ) {
+                Text(text = "Create")
+            }
         }
     }
 }
