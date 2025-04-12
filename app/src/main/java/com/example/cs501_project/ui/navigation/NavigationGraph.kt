@@ -27,6 +27,5 @@ fun AppNavigation(navController: NavHostController, viewModel: UserViewModel) {
         composable(route = "createAccount") {
             CreateAccount(viewModel = viewModel, onNavigateToLogin = { navController.popBackStack() })
         }
-
     }
 }
