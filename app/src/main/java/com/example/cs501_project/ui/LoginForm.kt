@@ -18,7 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun LoginForm(viewModel: UserViewModel, onNavigateToCreateAccount: () -> Unit) {
+fun LoginForm(viewModel: UserViewModel, onNavigateToCreateAccount: () -> Unit, onNavigateToLocationScreen: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope() // for launching coroutines
     val users by viewModel.users.collectAsState(initial = emptyList()) // observing user list
@@ -63,6 +63,7 @@ fun LoginForm(viewModel: UserViewModel, onNavigateToCreateAccount: () -> Unit) {
                         CoroutineScope(Dispatchers.Main).launch {
                             snackbarHostState.showSnackbar("Login successful")
                         }
+                        onNavigateToLocationScreen()
                     }
                     if (user != null && user.password != password) {
                         // wrong password
