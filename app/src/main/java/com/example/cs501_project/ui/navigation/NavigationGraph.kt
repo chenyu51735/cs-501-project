@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.cs501_project.ui.CreateAccount
 import com.example.cs501_project.ui.LandingScreen
+import com.example.cs501_project.ui.LocationScreen
 import com.example.cs501_project.ui.LoginForm
 import com.example.cs501_project.viewmodel.UserViewModel
 
@@ -21,12 +22,15 @@ fun AppNavigation(navController: NavHostController, viewModel: UserViewModel) {
         }
 
         composable(route = "login") {
-            LoginForm(viewModel = viewModel, onNavigateToCreateAccount = { navController.navigate("createAccount") })
+            LoginForm(viewModel = viewModel, onNavigateToCreateAccount = { navController.navigate("createAccount") }, onNavigateToLocationScreen = { navController.navigate("locationScreen") })
         }
 
         composable(route = "createAccount") {
             CreateAccount(viewModel = viewModel, onNavigateToLogin = { navController.popBackStack() })
         }
 
+        composable(route = "locationScreen") {
+            LocationScreen()
+        }
     }
 }
