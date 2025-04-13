@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,16 +15,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.*
 import androidx.compose.material3.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cs501_project.viewmodel.LocationViewModel
 
+// location screen will display all location-related information and list nearby historical places
 @Composable
 fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
     val context = LocalContext.current
+
+    // state variables to track whether or not location permissions have been granted
     var hasFineLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -34,9 +44,12 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
         )
     }
 
+    // observes state flows from the viewmodel and updates ui when a new location is received
     val historicalPlaces by locationViewModel.historicalPlaces.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
+    val currentCity by locationViewModel.currentCity.collectAsState()
 
+    // used to launch the system's permission request dialogue
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
@@ -46,6 +59,7 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
         }
     )
 
+    // if the permissions are not yet granted, will use LaunchedEffect to ask for them
     LaunchedEffect(Unit) {
         if (!hasFineLocationPermission || !hasCoarseLocationPermission) {
             locationPermissionLauncher.launch(
@@ -58,17 +72,45 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         if (currentLocation != null) {
-            Text("Your Current Location:")
-            Text("Latitude: ${currentLocation?.latitude}, Longitude: ${currentLocation?.longitude}")
+            Text(
+                text = "$currentCity",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(16.dp),
+                textAlign = TextAlign.Center,
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Nearby Historical Places:")
+            Text(
+                text = "Explore these places next... ",
+                modifier = Modifier
+                    .padding(16.dp),
+                textAlign = TextAlign.Center,
+            )
             if (historicalPlaces.isNotEmpty()) {
                 LazyColumn {
-                    items(historicalPlaces) { fact ->
-                        Text(fact.title)
+                    items(historicalPlaces) { place ->
+                        OutlinedCard(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                            ),
+                            border = BorderStroke(1.dp, Color.Black),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = place.title,
+                                modifier = Modifier
+                                    .padding(16.dp),
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                 }
             } else {
