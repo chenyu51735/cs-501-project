@@ -7,10 +7,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.*
@@ -26,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cs501_project.viewmodel.LocationViewModel
+import coil.compose.AsyncImage
 
 // location screen will display all location-related information and list nearby historical places
 @Composable
@@ -87,7 +92,7 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Explore these places next... ",
+                text = "Explore these places next... \uD83D\uDDFA\uFE0F",  // added a map emoji
                 modifier = Modifier
                     .padding(16.dp),
                 textAlign = TextAlign.Center,
@@ -104,12 +109,27 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
                                 .fillMaxSize()
                                 .padding(16.dp)
                         ) {
-                            Text(
-                                text = place.title,
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .padding(16.dp),
-                                textAlign = TextAlign.Center,
-                            )
+                                    .padding(24.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                if (!place.imageUrl.isNullOrEmpty()) {
+                                    AsyncImage(
+                                        model = place.imageUrl,
+                                        contentDescription = place.geoSearchResult.title,
+                                        modifier = Modifier.size(100.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
+                                Text(
+                                    text = place.geoSearchResult.title,
+                                    modifier = Modifier
+                                        .padding(16.dp),
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
                         }
                     }
                 }
@@ -119,7 +139,7 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
         } else if (!hasFineLocationPermission || !hasCoarseLocationPermission) {
             Text("Location permissions not granted.")
         } else {
-            Text("Getting location...")
+            Text("Getting location...") // maybe want to consider changing this to a loading animation
         }
     }
 }
