@@ -16,6 +16,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import java.util.Locale
 
+// this data class will map the geosearch result (historical place) with the url of an image of it
+data class HistoricalPlaceWithImage(
+    val geoSearchResult: GeoSearchResult,
+    val imageUrl: String? = null
+)
+
 // intermediary between LocationScreen and data sources (MediaWikiClient and LocationService)
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
     // needed to access location updates
@@ -24,9 +30,9 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     val currentLocation: StateFlow<Location?> = locationService.currentLocation
 
     // mutable stateflow to hold the list of historical places from mediawiki using geo-searching
-    private val _historicalPlaces = MutableStateFlow<List<GeoSearchResult>>(emptyList())
+    private val _historicalPlaces = MutableStateFlow<List<HistoricalPlaceWithImage>>(emptyList())
     // immutable stateflow for other parts of app to access
-    val historicalPlaces: StateFlow<List<GeoSearchResult>> = _historicalPlaces
+    val historicalPlaces: MutableStateFlow<List<HistoricalPlaceWithImage>> = _historicalPlaces
 
     private val _currentCity = MutableStateFlow<String?>(null)
     val currentCity: StateFlow<String?> = _currentCity
@@ -58,11 +64,15 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             try {
                 val coordinates = "${latitude}|${longitude}"
                 val response = WikiClient.wikiApi.searchNearbyHistoricalPlaces(coordinates)
-                _historicalPlaces.value = response.query?.geosearch ?: emptyList()
+                val places = response.query?.geosearch ?: emptyList()
+                _historicalPlaces.value = places.map { place ->
+                    HistoricalPlaceWithImage(geoSearchResult = place)
+                }
+                fetchImagesForPlaces(places)
             } catch (e: Exception) {
                 // handle network errors
                 e.printStackTrace()
-                _historicalPlaces.value = listOf(GeoSearchResult(pageid = -1, ns = -1, title = "Error fetching data", lat = 0.0, lon = 0.0, dist = 0.0))
+                _historicalPlaces.value = listOf(HistoricalPlaceWithImage( geoSearchResult = GeoSearchResult(pageid = -1, ns = -1, title = "Error fetching data", lat = 0.0, lon = 0.0, dist = 0.0)))
             }
         }
     }
@@ -80,6 +90,32 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         } catch (e: Exception) {
             e.printStackTrace()
             null
+        }
+    }
+
+    private fun fetchImagesForPlaces(places: List<GeoSearchResult>) {
+        viewModelScope.launch { // launch a coroutine so it does not interfere with main UI thread
+            // iterating through each of the objects in geo-search results
+            places.forEach { place ->
+                try {
+                    // will try to call the MediaWiki API through getPageImage() func defined in MediaWikiApi.kt
+                    val response = WikiClient.wikiApi.getPageImage(pageIds = place.pageid.toString())
+                    // imageUrl extracts the URL of the thumbnail image from the response object
+                    val imageUrl = response.query?.pages?.get(place.pageid.toString())?.thumbnail?.source
+
+                    // updates historical places stateflow with images if there is one
+                    _historicalPlaces.value = _historicalPlaces.value.map { item ->
+                        if (item.geoSearchResult.pageid == place.pageid) {
+                            item.copy(imageUrl = imageUrl)
+                        } else {
+                            item
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    // handle image fetching errors
+                }
+            }
         }
     }
 }
