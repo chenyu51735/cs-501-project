@@ -9,6 +9,9 @@ android {
     namespace = "com.example.cs501_project"
     compileSdk = 35
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.3.2"
+    }
     defaultConfig {
         applicationId = "com.example.cs501_project"
         minSdk = 33
@@ -48,6 +51,9 @@ android {
 }
 
 dependencies {
+    implementation("com.mapbox.maps:android:11.11.0")
+    implementation(libs.android)
+    implementation(libs.maps.compose)
     implementation(libs.accompanist.permissions)
     implementation(libs.play.services.location)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -63,6 +69,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.gson)
+    implementation(libs.play.services.maps)
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
