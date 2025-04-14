@@ -17,8 +17,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.*
-import androidx.compose.material3.*
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,9 +36,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cs501_project.viewmodel.LocationViewModel
+import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.MapView
+import com.mapbox.maps.Style
 import coil.compose.AsyncImage
 
 // location screen will display all location-related information and list nearby historical places
@@ -90,7 +104,33 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
                     .padding(16.dp),
                 textAlign = TextAlign.Center,
             )
+
             Spacer(modifier = Modifier.height(16.dp))
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .padding(bottom = 16.dp),
+                factory = { context ->
+                    MapView(context).apply {
+                        mapboxMap.loadStyleUri(Style.MAPBOX_STREETS) {
+                            mapboxMap.setCamera(
+                                CameraOptions.Builder()
+                                    .center(
+                                        Point.fromLngLat(
+                                            currentLocation!!.longitude,
+                                            currentLocation!!.latitude
+                                        )
+                                    )
+                                    .zoom(12.0)
+                                    .build()
+                            )
+                        }
+                    }
+                }
+            )
+
+
             Text(
                 text = "Explore these places next... \uD83D\uDDFA\uFE0F",  // added a map emoji
                 modifier = Modifier
