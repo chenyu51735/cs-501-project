@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
@@ -65,7 +66,9 @@ fun CreateAccount(viewModel: UserViewModel, onNavigateToLogin: () -> Unit) {
         )
 
         Row(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(8.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             // create account button
             Button( onClick = {
@@ -90,6 +93,9 @@ fun CreateAccount(viewModel: UserViewModel, onNavigateToLogin: () -> Unit) {
             }
             ) {
                 Text(text = "Create")
+            }
+            Button(onClick = onNavigateToLogin) {
+                Text(text = "Back")
             }
         }
     }
