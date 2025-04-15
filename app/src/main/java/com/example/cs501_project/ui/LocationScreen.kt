@@ -121,7 +121,7 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
             MapboxView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp)
+                    .height(480.dp)
                     .padding(bottom = 16.dp),
                 initialCameraPosition = initialCameraPoint,
                 predefinedMarkerLocations = historicalMarkerPoints,
