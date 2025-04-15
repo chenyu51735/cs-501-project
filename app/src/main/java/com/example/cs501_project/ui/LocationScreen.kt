@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,6 +69,16 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val currentCity by locationViewModel.currentCity.collectAsState()
 
+    val customMarkers = remember { mutableStateListOf<Point>() } // going to hold all the marker points
+    val historicalMarkerPoints = remember(historicalPlaces) { // these are the predefined suggestions markers
+        historicalPlaces.map { Point.fromLngLat(it.geoSearchResult.lon, it.geoSearchResult.lat) }
+    }
+
+    // so the mapbox view knows where to zoom in
+    val initialCameraPoint = remember(currentLocation) {
+        currentLocation?.let { Point.fromLngLat(it.longitude, it.latitude) }
+    }
+
     // used to launch the system's permission request dialogue
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -106,28 +117,18 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            AndroidView(
+            // displaying the mapbox and defining the parameters for it
+            MapboxView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
                     .padding(bottom = 16.dp),
-                factory = { context ->
-                    MapView(context).apply {
-                        mapboxMap.loadStyleUri(Style.MAPBOX_STREETS) {
-                            mapboxMap.setCamera(
-                                CameraOptions.Builder()
-                                    .center(
-                                        Point.fromLngLat(
-                                            currentLocation!!.longitude,
-                                            currentLocation!!.latitude
-                                        )
-                                    )
-                                    .zoom(12.0)
-                                    .build()
-                            )
-                        }
-                    }
-                }
+                initialCameraPosition = initialCameraPoint,
+                predefinedMarkerLocations = historicalMarkerPoints,
+                onMapClick = { point ->
+                    customMarkers.add(point)
+                },
+                customMarkers = customMarkers,
             )
 
 
@@ -156,6 +157,7 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
                                     .fillMaxWidth()
                             ) {
                                 if (!place.imageUrl.isNullOrEmpty()) {
+                                    // if no image available, have a different format for the cards
                                     AsyncImage(
                                         model = place.imageUrl,
                                         contentDescription = place.geoSearchResult.title,
@@ -174,7 +176,7 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
                     }
                 }
             } else {
-                Text("No historical places found nearby.")
+                Text("No historical places found nearby 😞")
             }
         } else if (!hasFineLocationPermission || !hasCoarseLocationPermission) {
             Text("Location permissions not granted.")
