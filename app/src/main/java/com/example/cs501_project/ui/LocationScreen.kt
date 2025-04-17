@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,10 +47,11 @@ import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
 import coil.compose.AsyncImage
+import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 
 // location screen will display all location-related information and list nearby historical places
 @Composable
-fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
+fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigateToFacts: (HistoricalPlaceWithImage) -> Unit) {
     val context = LocalContext.current
 
     // state variables to track whether or not location permissions have been granted
@@ -149,6 +151,15 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(16.dp)
+                                .clickable {
+                                    onNavigateToFacts(
+                                        HistoricalPlaceWithImage(
+                                            geoSearchResult = place.geoSearchResult,
+                                            imageUrl = place.imageUrl,
+                                            historicalFacts = place.historicalFacts
+                                        )
+                                    )
+                                }
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
