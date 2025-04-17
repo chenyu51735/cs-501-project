@@ -152,6 +152,7 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
                                 .fillMaxSize()
                                 .padding(16.dp)
                                 .clickable {
+                                    // when you click on a card it navigates to a new screen with info
                                     onNavigateToFacts(
                                         HistoricalPlaceWithImage(
                                             geoSearchResult = place.geoSearchResult,
