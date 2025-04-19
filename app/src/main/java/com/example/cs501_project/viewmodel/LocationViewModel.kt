@@ -24,7 +24,7 @@ data class HistoricalPlaceWithImage(
     // image URL of the location
     val imageUrl: String? = null,
     // any historical facts associated with it from the MediaWiki API
-    val historicalFacts: List<String>? = emptyList()
+    val historicalFacts: List<String> = emptyList()
 )
 
 // intermediary between LocationScreen and data sources (MediaWikiClient and LocationService)
@@ -132,7 +132,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             places.forEach { place ->
                 try {
                     val response = geminiApi.getHistoricalFacts(place.title)
-                    val listOfFacts = response?.split(".")
+                    val listOfFacts = response!!.split(".")
 
                     _historicalPlaces.value = _historicalPlaces.value.map { item ->
                         if (item.geoSearchResult.pageid == place.pageid) {
