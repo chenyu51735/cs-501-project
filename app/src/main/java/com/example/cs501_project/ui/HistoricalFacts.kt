@@ -3,7 +3,7 @@ package com.example.cs501_project.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,7 +21,7 @@ fun HistoricalFacts(place: HistoricalPlaceWithImage) {
     Column(
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxWidth(),
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -40,4 +40,5 @@ fun HistoricalFacts(place: HistoricalPlaceWithImage) {
             )
         }
     }
+    // maybe add a user input card, having a preset number of symbols?
 }

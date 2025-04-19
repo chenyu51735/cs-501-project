@@ -39,6 +39,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true // so that we can access key from local.properties
         compose = true
     }
 
@@ -51,8 +52,8 @@ android {
 }
 
 dependencies {
-    implementation("com.mapbox.maps:android:11.11.0")
     implementation(libs.android)
+    implementation(libs.generativeai)
     implementation(libs.maps.compose)
     implementation(libs.accompanist.permissions)
     implementation(libs.play.services.location)
