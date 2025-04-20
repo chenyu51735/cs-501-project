@@ -16,4 +16,9 @@ interface WikiApi {
     suspend fun getPageImage(
         @Query("pageids") pageIds: String
     ): WikiImageResponse
+
+    @GET("w/api.php?action=query&prop=extracts&explaintext&format=json&exsentences=2")
+    suspend fun getPageExtract(
+        @Query("pageids") pageIds: String
+    ) : WikiExtractResponse
 }

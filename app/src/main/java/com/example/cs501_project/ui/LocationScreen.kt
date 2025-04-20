@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,19 +38,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cs501_project.viewmodel.LocationViewModel
 import com.mapbox.geojson.Point
-import com.mapbox.maps.CameraOptions
-import com.mapbox.maps.MapView
-import com.mapbox.maps.Style
 import coil.compose.AsyncImage
+import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 
 // location screen will display all location-related information and list nearby historical places
 @Composable
-fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
+fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigateToFacts: (HistoricalPlaceWithImage) -> Unit) {
     val context = LocalContext.current
 
     // state variables to track whether or not location permissions have been granted
@@ -121,7 +119,7 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
             MapboxView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp)
+                    .height(480.dp)
                     .padding(bottom = 16.dp),
                 initialCameraPosition = initialCameraPoint,
                 predefinedMarkerLocations = historicalMarkerPoints,
@@ -149,6 +147,16 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel()) {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(16.dp)
+                                .clickable {
+                                    // when you click on a card it navigates to a new screen with info
+                                    onNavigateToFacts(
+                                        HistoricalPlaceWithImage(
+                                            geoSearchResult = place.geoSearchResult,
+                                            imageUrl = place.imageUrl,
+                                            historicalFacts = place.historicalFacts
+                                        )
+                                    )
+                                }
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,

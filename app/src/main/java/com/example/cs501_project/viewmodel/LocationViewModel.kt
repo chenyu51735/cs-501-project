@@ -7,6 +7,7 @@ import android.location.Geocoder
 import android.location.Location
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cs501_project.api.GeminiApi
 import com.example.cs501_project.api.GeoSearchResult
 import com.example.cs501_project.api.WikiClient
 import com.example.cs501_project.location.LocationService
@@ -16,10 +17,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import java.util.Locale
 
-// this data class will map the geosearch result (historical place) with the url of an image of it
+// this data class will map the geosearch result (historical place) with the url of an image of it + f
 data class HistoricalPlaceWithImage(
+    // historical location suggestions as GeoSearchResult
     val geoSearchResult: GeoSearchResult,
-    val imageUrl: String? = null
+    // image URL of the location
+    val imageUrl: String? = null,
+    // any historical facts associated with it from the MediaWiki API
+    val historicalFacts: List<String> = emptyList()
 )
 
 // intermediary between LocationScreen and data sources (MediaWikiClient and LocationService)
@@ -28,6 +33,8 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private val locationService = LocationService(application.applicationContext)
     // using locationService to access the latest location
     val currentLocation: StateFlow<Location?> = locationService.currentLocation
+    // gemini api instance
+    private val geminiApi = GeminiApi()
 
     // mutable stateflow to hold the list of historical places from mediawiki using geo-searching
     private val _historicalPlaces = MutableStateFlow<List<HistoricalPlaceWithImage>>(emptyList())
@@ -69,6 +76,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                     HistoricalPlaceWithImage(geoSearchResult = place)
                 }
                 fetchImagesForPlaces(places)
+                fetchFactsForPlaces(places)
             } catch (e: Exception) {
                 // handle network errors
                 e.printStackTrace()
@@ -114,6 +122,27 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                 } catch (e: Exception) {
                     e.printStackTrace()
                     // handle image fetching errors
+                }
+            }
+        }
+    }
+
+    private fun fetchFactsForPlaces(places: List<GeoSearchResult>) {
+        viewModelScope.launch {
+            places.forEach { place ->
+                try {
+                    val response = geminiApi.getHistoricalFacts(place.title)
+                    val listOfFacts = response!!.split(".")
+
+                    _historicalPlaces.value = _historicalPlaces.value.map { item ->
+                        if (item.geoSearchResult.pageid == place.pageid) {
+                            item.copy(historicalFacts = listOfFacts)
+                        } else {
+                            item
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
         }
