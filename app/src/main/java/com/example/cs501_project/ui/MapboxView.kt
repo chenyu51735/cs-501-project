@@ -1,7 +1,9 @@
 package com.example.cs501_project.ui
 
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -15,9 +17,17 @@ import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.example.cs501_project.R
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.gestures.addOnMapClickListener
+
+// data class for the custom map markers when user clicks map
+data class CustomMapMarker(
+    val point: Point, // lat and lon point
+    val title: String, // whatever the user wants to call it
+    val symbol: String // name of symbol without .png at end
+)
 
 // separate mapbox view for the location screen
 @Composable
@@ -26,9 +36,9 @@ fun MapboxView(
     initialCameraPosition: Point?, // the initial camera position is based on the current location
     predefinedMarkerLocations: List<Point> = emptyList(), // markers from historical place suggestions
     onMapClick: ((Point) -> Unit)? = null, // callback for map clicks
-    customMarkers: List<Point> = emptyList() // markers added by user when they click on the map
+    customMarkers: List<CustomMapMarker> = emptyList(), // markers added by user when they click on the map
+    onNewCustomMarkerAdded: (Point, String, String) -> Unit
 ) {
-
     // mutable state that holds android view that displays map and the remember ensures MapView instance is retained across recompositions
     val mapboxMapView = remember { mutableStateOf<MapView?>(null) }
     // holds mutable state for MapboxMap object which has programmatic control over the map such as adding layers
@@ -37,6 +47,26 @@ fun MapboxView(
     val annotationPlugin = remember { mutableStateOf<AnnotationPlugin?>(null) }
     // specific type of AnnotationManager that is used for placing point markers
     val pointAnnotationManager = remember { mutableStateOf<PointAnnotationManager?>(null) }
+
+    var isCustomMarkerDialogVisible by remember { mutableStateOf(false) }
+    // holds custom marker title that user inputs
+    var newMarkerTitle by remember { mutableStateOf("") }
+    // holds symbol that user picks for marker
+    var newMarkerSymbol by remember { mutableStateOf("default_marker.png") }
+    // the lat and lon of the new custom marker
+    var clickedPointForNewMarker by remember { mutableStateOf<Point?>(null) }
+
+    if (isCustomMarkerDialogVisible && clickedPointForNewMarker != null) {
+        // show the custom marker dialog if a point on the map is clicked
+        CustomMarkerDialog(
+            onDismissRequest = { isCustomMarkerDialogVisible = false },
+            onConfirm = { title, symbol ->
+                onNewCustomMarkerAdded(clickedPointForNewMarker!!, title, symbol)
+                isCustomMarkerDialogVisible = false
+                clickedPointForNewMarker = null // reset the clicked point
+            }
+        )
+    }
 
     // used to embed an AndroidView (MapView for us) in our UI
     AndroidView(
@@ -77,6 +107,8 @@ fun MapboxView(
                     onMapClick?.let { clickCallback ->
                         mapboxMap.value?.addOnMapClickListener { point ->
                             clickCallback(point)
+                            clickedPointForNewMarker = point
+                            isCustomMarkerDialogVisible = true
                             true
                         }
                     }
@@ -96,6 +128,34 @@ fun MapboxView(
                     )
                 }
 
+                val context = mapView.context
+                customMarkers.forEach { customMarker ->
+                    if (customMarker.symbol != "default_marker") {
+                        val resId = context.resources.getIdentifier(
+                            customMarker.symbol,
+                            "drawable",
+                            context.packageName
+                        )
+                        if (resId != 0) {
+                            // if the resource drawable id exists, try fetching it and creating bitmap
+                            try {
+                                val bitmap = BitmapFactory.decodeResource(context.resources, resId)
+                                style.addImage(customMarker.symbol, bitmap) // attempt to add the image
+                            } catch (e: Exception) {
+                                Log.e("MapboxView", "Error loading image: ${customMarker.symbol}", e)
+                            }
+                        }
+                    }
+                    // create the custom marker symbol
+                    pointAnnotationManager.value?.create(
+                        PointAnnotationOptions()
+                            .withPoint(customMarker.point)
+                            .withIconImage(customMarker.symbol) // Use symbol directly
+                            .withIconSize(0.1)
+                    )
+                }
+
+
                 // reload all the markers, both predefined and user-added
                 pointAnnotationManager.value?.deleteAll()
                 predefinedMarkerLocations.forEach { point ->
@@ -109,8 +169,8 @@ fun MapboxView(
                 customMarkers.forEach { point ->
                     pointAnnotationManager.value?.create(
                         PointAnnotationOptions()
-                            .withPoint(point)
-                            .withIconImage("default_marker")
+                            .withPoint(point.point)
+                            .withIconImage(point.symbol)
                             .withIconSize(0.1)
                     )
                 }

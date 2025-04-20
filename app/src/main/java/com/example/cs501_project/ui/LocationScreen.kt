@@ -67,7 +67,7 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val currentCity by locationViewModel.currentCity.collectAsState()
 
-    val customMarkers = remember { mutableStateListOf<Point>() } // going to hold all the marker points
+    val customMarkers = remember { mutableStateListOf<CustomMapMarker>() } // going to hold all the marker points
     val historicalMarkerPoints = remember(historicalPlaces) { // these are the predefined suggestions markers
         historicalPlaces.map { Point.fromLngLat(it.geoSearchResult.lon, it.geoSearchResult.lat) }
     }
@@ -76,6 +76,10 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
     val initialCameraPoint = remember(currentLocation) {
         currentLocation?.let { Point.fromLngLat(it.longitude, it.latitude) }
     }
+
+    // states needed for adding custom markers
+    var isCustomMarkerDialogVisible by remember { mutableStateOf(false) }
+    var clickedPointForNewMarker by remember { mutableStateOf<Point?>(null) }
 
     // used to launch the system's permission request dialogue
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -124,9 +128,16 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
                 initialCameraPosition = initialCameraPoint,
                 predefinedMarkerLocations = historicalMarkerPoints,
                 onMapClick = { point ->
-                    customMarkers.add(point)
+                    clickedPointForNewMarker = point
+                    isCustomMarkerDialogVisible = true
                 },
                 customMarkers = customMarkers,
+                onNewCustomMarkerAdded = { point, title, symbol ->
+                    val newCustomMarker = CustomMapMarker(point = point, title = title, symbol = symbol)
+                    customMarkers.add(newCustomMarker)
+                    isCustomMarkerDialogVisible = false
+                    clickedPointForNewMarker = null
+                }
             )
 
 
