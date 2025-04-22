@@ -2,10 +2,12 @@ package com.example.cs501_project.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import com.google.gson.Gson
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.cs501_project.viewmodel.LocationViewModel
 import com.mapbox.geojson.Point
 import coil.compose.AsyncImage
@@ -47,7 +50,12 @@ import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 
 // location screen will display all location-related information and list nearby historical places
 @Composable
-fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigateToFacts: (HistoricalPlaceWithImage) -> Unit) {
+fun LocationScreen(
+    locationViewModel: LocationViewModel = viewModel(),
+    onNavigateToFacts: (HistoricalPlaceWithImage) -> Unit,
+    navController: NavHostController
+) {
+    val gson = Gson()
     val context = LocalContext.current
 
     // state variables to track whether or not location permissions have been granted
@@ -121,10 +129,6 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
             Spacer(modifier = Modifier.height(16.dp))
             // displaying the mapbox and defining the parameters for it
             MapboxView(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(480.dp)
-                    .padding(bottom = 16.dp),
                 initialCameraPosition = initialCameraPoint,
                 predefinedMarkerLocations = historicalMarkerPoints,
                 onMapClick = { point ->
@@ -137,6 +141,10 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
                     customMarkers.add(newCustomMarker)
                     isCustomMarkerDialogVisible = false
                     clickedPointForNewMarker = null
+                },
+                onNavigateToCardDetails = { marker ->
+                    val encodedMarker = Uri.encode(gson.toJson(marker))
+                    navController.navigate("customCardDetails/$encodedMarker")
                 }
             )
 

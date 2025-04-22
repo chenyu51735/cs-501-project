@@ -3,15 +3,15 @@ package com.example.cs501_project.ui
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CardDefaults
@@ -36,11 +36,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.cs501_project.R
-import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
+import com.example.cs501_project.viewmodel.LocationViewModel
+import com.mapbox.maps.plugin.Plugin
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.gestures.addOnMapClickListener
 
@@ -54,12 +54,12 @@ data class CustomMapMarker(
 // separate mapbox view for the location screen
 @Composable
 fun MapboxView(
-    modifier: Modifier = Modifier,
     initialCameraPosition: Point?, // the initial camera position is based on the current location
     predefinedMarkerLocations: List<Point> = emptyList(), // markers from historical place suggestions
     onMapClick: ((Point) -> Unit)? = null, // callback for map clicks
     customMarkers: List<CustomMapMarker> = emptyList(), // markers added by user when they click on the map
-    onNewCustomMarkerAdded: (Point, String, String) -> Unit
+    onNewCustomMarkerAdded: (Point, String, String) -> Unit,
+    onNavigateToCardDetails: (CustomMapMarker) -> Unit
 ) {
     // mutable state that holds android view that displays map and the remember ensures MapView instance is retained across recompositions
     val mapboxMapView = remember { mutableStateOf<MapView?>(null) }
@@ -93,7 +93,10 @@ fun MapboxView(
     Column {
         // used to embed an AndroidView (MapView for us) in our UI
         AndroidView(
-            modifier = modifier,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(480.dp)
+                .padding(bottom = 16.dp),
             factory = { ctx ->
                 MapView(ctx).apply {
                     mapboxMapView.value = this // stores the created MapView instance in the mapboxMapView state
@@ -204,9 +207,47 @@ fun MapboxView(
         if (customMarkers.isNotEmpty()) {
             LazyColumn {
                 items(customMarkers) { marker ->
-                    CustomLocationCard(marker)
+                    CustomLocationCard(marker) {
+                        onNavigateToCardDetails(marker)
+                    }
                 }
             }
+        }
+    }
+}
+
+
+// card to display under map that represent user made markers
+@Composable
+fun CustomLocationCard(marker: CustomMapMarker, onCardClick: (CustomMapMarker) -> Unit) {
+    // custom map marker has point, title, symbol
+
+    // add ability to edit title
+    OutlinedCard(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        border = BorderStroke(1.dp, Color.Black),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .clickable{ onCardClick(marker) }
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth()
+        ) {
+            val symbolName = marker.symbol
+
+            Image(
+                painter = painterResource(R.drawable.movie), // placeholder movie marker, will replace with actual symbol or image
+                contentDescription = null,
+                modifier = Modifier.size(100.dp)
+            )
+
+            Text(text = marker.title)
         }
     }
 }
