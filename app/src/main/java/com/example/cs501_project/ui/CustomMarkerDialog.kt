@@ -24,11 +24,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.cs501_project.viewmodel.CustomMapMarker
 
 @Composable
 fun CustomMarkerDialog(
     onDismissRequest: () -> Unit, // when user clicks cancel or when they click out of the dialog
-    onConfirm: (String, String) -> Unit // callback to handle the user's input of title and symbol
+    onConfirm: (String, String) -> Unit, // callback to handle the user's input of title and symbol
+    existingMarker: CustomMapMarker? = null // so that it can update an existing marker, optional
 ) {
     // marker title
     var markerTitle by remember { mutableStateOf("") }
@@ -56,6 +58,10 @@ fun CustomMarkerDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                Text(
+                    text = if (existingMarker == null) "Add Custom Marker" else "Update Custom Marker",
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
                 OutlinedTextField(
                     value = markerTitle,
                     onValueChange = { markerTitle = it },
@@ -108,7 +114,9 @@ fun CustomMarkerDialog(
                         onClick = { onConfirm(markerTitle, markerSymbol) },
                         enabled = markerTitle.isNotBlank() // enable only if title is entered
                     ) {
-                        Text("Save")
+                        Text(
+                            text = if (existingMarker == null) "Add" else "Update"
+                        )
                     }
                 }
             }

@@ -28,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.runtime.State
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -46,6 +46,7 @@ import androidx.navigation.NavHostController
 import com.example.cs501_project.viewmodel.LocationViewModel
 import com.mapbox.geojson.Point
 import coil.compose.AsyncImage
+import com.example.cs501_project.viewmodel.CustomMapMarker
 import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 
 // location screen will display all location-related information and list nearby historical places
@@ -74,8 +75,8 @@ fun LocationScreen(
     val historicalPlaces by locationViewModel.historicalPlaces.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val currentCity by locationViewModel.currentCity.collectAsState()
+    val customMarkers by locationViewModel.customMarkers.collectAsState()
 
-    val customMarkers = remember { mutableStateListOf<CustomMapMarker>() } // going to hold all the marker points
     val historicalMarkerPoints = remember(historicalPlaces) { // these are the predefined suggestions markers
         historicalPlaces.map { Point.fromLngLat(it.geoSearchResult.lon, it.geoSearchResult.lat) }
     }
@@ -108,6 +109,18 @@ fun LocationScreen(
         }
     }
 
+    val updatedMarkerResult: State<String?> = remember {
+        navController.currentBackStackEntry?.savedStateHandle?.getStateFlow("updatedCustomMarker", null)
+    }?.collectAsState(null) ?: remember { mutableStateOf(null) } // Use remember for mutableStateOf
+
+    LaunchedEffect(updatedMarkerResult.value) {
+        updatedMarkerResult.value?.let { encodedUpdatedMarker ->
+            navController.currentBackStackEntry?.savedStateHandle?.remove<String>("updatedCustomMarker")
+            val updatedMarker = gson.fromJson(Uri.decode(encodedUpdatedMarker), CustomMapMarker::class.java)
+            locationViewModel.updateCustomMarker(updatedMarker)
+        }
+    }
+
     // displaying the historical places
     Column(
         modifier = Modifier
@@ -137,8 +150,7 @@ fun LocationScreen(
                 },
                 customMarkers = customMarkers,
                 onNewCustomMarkerAdded = { point, title, symbol ->
-                    val newCustomMarker = CustomMapMarker(point = point, title = title, symbol = symbol)
-                    customMarkers.add(newCustomMarker)
+                    locationViewModel.addCustomMarker(point, title, symbol) // Add via ViewModel
                     isCustomMarkerDialogVisible = false
                     clickedPointForNewMarker = null
                 },

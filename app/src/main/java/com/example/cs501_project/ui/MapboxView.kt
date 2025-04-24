@@ -39,17 +39,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.cs501_project.R
-import com.example.cs501_project.viewmodel.LocationViewModel
-import com.mapbox.maps.plugin.Plugin
+import com.example.cs501_project.viewmodel.CustomMapMarker
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.gestures.addOnMapClickListener
-
-// data class for the custom map markers when user clicks map
-data class CustomMapMarker(
-    val point: Point, // lat and lon point
-    val title: String, // whatever the user wants to call it
-    val symbol: String // name of symbol without .png at end
-)
 
 // separate mapbox view for the location screen
 @Composable
@@ -57,7 +49,8 @@ fun MapboxView(
     initialCameraPosition: Point?, // the initial camera position is based on the current location
     predefinedMarkerLocations: List<Point> = emptyList(), // markers from historical place suggestions
     onMapClick: ((Point) -> Unit)? = null, // callback for map clicks
-    customMarkers: List<CustomMapMarker> = emptyList(), // markers added by user when they click on the map
+    //customMarkers: List<CustomMapMarker> = emptyList(), // markers added by user when they click on the map
+    customMarkers: List<CustomMapMarker>,
     onNewCustomMarkerAdded: (Point, String, String) -> Unit,
     onNavigateToCardDetails: (CustomMapMarker) -> Unit
 ) {
