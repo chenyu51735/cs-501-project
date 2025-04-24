@@ -1,11 +1,11 @@
 package com.example.cs501_project
 
 import android.app.Application
-import com.example.cs501_project.data.database.DatabaseManager
+import com.example.cs501_project.data.database.AppDatabase
 
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        DatabaseManager.getDatabase(this)
+        AppDatabase.getDatabase(this)
     }
 }

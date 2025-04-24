@@ -5,21 +5,28 @@ import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cs501_project.api.GeminiApi
 import com.example.cs501_project.api.GeoSearchResult
 import com.example.cs501_project.api.WikiClient
+import com.example.cs501_project.data.database.AppDatabase
+import com.example.cs501_project.data.database.HistoricalPlaceDao
 import com.example.cs501_project.location.LocationService
+import com.example.cs501_project.model.HistoricalPlace
 import com.mapbox.geojson.Point
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.Locale
 
-// this data class will map the geosearch result (historical place) with the url of an image of it + f
+// this data class will map the geosearch result (historical place) with the url of an image of it
 data class HistoricalPlaceWithImage(
     // historical location suggestions as GeoSearchResult
     val geoSearchResult: GeoSearchResult,
@@ -38,6 +45,7 @@ data class CustomMapMarker(
 
 // intermediary between LocationScreen and data sources (MediaWikiClient and LocationService)
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
+    private val historicalPlaceDao = AppDatabase.getDatabase(application).historicalPlaceDao()
     // needed to access location updates
     private val locationService = LocationService(application.applicationContext)
     // using locationService to access the latest location
@@ -60,7 +68,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     fun updateCustomMarker(updatedMarker: CustomMapMarker) {
         _customMarkers.update { currentList ->
             currentList.map {
-                if (it.point == updatedMarker.point) { // Assuming point is a unique identifier
+                if (it.point == updatedMarker.point) { // assuming point is a unique identifier
                     updatedMarker
                 } else {
                     it
@@ -69,13 +77,34 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // mutable stateflow to hold the list of historical places from mediawiki using geo-searching
-    private val _historicalPlaces = MutableStateFlow<List<HistoricalPlaceWithImage>>(emptyList())
-    // immutable stateflow for other parts of app to access
-    val historicalPlaces: MutableStateFlow<List<HistoricalPlaceWithImage>> = _historicalPlaces
-
     private val _currentCity = MutableStateFlow<String?>(null)
     val currentCity: StateFlow<String?> = _currentCity
+
+    private val currentUserId: Int = 1 // Replace with your actual user ID retrieval NEED TO CHANGE, maybe after remote database auth?
+
+    val historicalPlaces: StateFlow<List<HistoricalPlaceWithImage>> =
+        historicalPlaceDao.getAllHistoricalPlacesForUser(currentUserId)
+            .map { entities ->
+                entities.map { entity ->
+                    HistoricalPlaceWithImage(
+                        geoSearchResult = GeoSearchResult(
+                            pageid = entity.placeId.hashCode(), // Use a stable unique ID
+                            ns = 0,
+                            title = entity.title,
+                            lat = entity.latitude,
+                            lon = entity.longitude,
+                            dist = 0.0
+                        ),
+                        imageUrl = entity.imageUrl,
+                        historicalFacts = emptyList()
+                    )
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
 
     // once the viewmodel is created, it starts listening for location updates from LocationService
     init {
@@ -100,20 +129,44 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     // launches a coroutine to make an api call to MediaWiki to search for historical places near coordinates
     private fun fetchNearbyHistoricalPlaces(latitude: Double, longitude: Double) {
+        Log.d("LocationViewModel", "fetchNearbyHistoricalPlaces called with: $latitude, $longitude")
         viewModelScope.launch {
             try {
                 val coordinates = "${latitude}|${longitude}"
+                Log.d("LocationViewModel", "Calling WikiClient API with coordinates: $coordinates")
                 val response = WikiClient.wikiApi.searchNearbyHistoricalPlaces(coordinates)
+                Log.d("LocationViewModel", "WikiClient API response: $response")
                 val places = response.query?.geosearch ?: emptyList()
-                _historicalPlaces.value = places.map { place ->
-                    HistoricalPlaceWithImage(geoSearchResult = place)
+                Log.d("LocationViewModel", "Number of places found: ${places.size}")
+                places.forEach { place ->
+                    var imageUrl: String? = null // default to null if no image
+                    try {
+                        val imageResponse = WikiClient.wikiApi.getPageImage(pageIds = place.pageid.toString())
+                        imageUrl = imageResponse.query?.pages?.get(place.pageid.toString())?.thumbnail?.source
+                    } catch (e: Exception) {
+                        e.printStackTrace() // Log the error, but continue
+                    }
+                    Log.d(
+                        "LocationViewModel",
+                        "Place: title=${place.title}, pageid=${place.pageid}, lat=${place.lat}, lon=${place.lon}"
+                    )
+                    val historicalPlaceEntity = HistoricalPlace(
+                        userId = currentUserId,
+                        placeId = place.pageid.toString(), // use pageid as a stable ID
+                        title = place.title,
+                        latitude = place.lat,
+                        longitude = place.lon,
+                        historicalFacts = null.toString(), // fetch facts later
+                        pushNotificationSent = false,
+                        imageUrl = imageUrl
+                    )
+                    historicalPlaceDao.insert(historicalPlaceEntity)
+                    fetchFactsForPlaces(historicalPlaceEntity)
                 }
-                fetchImagesForPlaces(places)
-                fetchFactsForPlaces(places)
             } catch (e: Exception) {
                 // handle network errors
+                Log.e("LocationViewModel", "Error fetching nearby places: ${e.message}")
                 e.printStackTrace()
-                _historicalPlaces.value = listOf(HistoricalPlaceWithImage( geoSearchResult = GeoSearchResult(pageid = -1, ns = -1, title = "Error fetching data", lat = 0.0, lon = 0.0, dist = 0.0)))
             }
         }
     }
@@ -134,50 +187,20 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    private fun fetchImagesForPlaces(places: List<GeoSearchResult>) {
-        viewModelScope.launch { // launch a coroutine so it does not interfere with main UI thread
-            // iterating through each of the objects in geo-search results
-            places.forEach { place ->
-                try {
-                    // will try to call the MediaWiki API through getPageImage() func defined in MediaWikiApi.kt
-                    val response = WikiClient.wikiApi.getPageImage(pageIds = place.pageid.toString())
-                    // imageUrl extracts the URL of the thumbnail image from the response object
-                    val imageUrl = response.query?.pages?.get(place.pageid.toString())?.thumbnail?.source
-
-                    // updates historical places stateflow with images if there is one
-                    _historicalPlaces.value = _historicalPlaces.value.map { item ->
-                        if (item.geoSearchResult.pageid == place.pageid) {
-                            item.copy(imageUrl = imageUrl)
-                        } else {
-                            item
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    // handle image fetching errors
-                }
+    private fun fetchFactsForPlaces(historicalPlace: HistoricalPlace) {
+        viewModelScope.launch {
+            try {
+                val response = geminiApi.getHistoricalFacts(historicalPlace.title)
+                val facts = response?.split(".")?.filter { it.isNotBlank() }?.joinToString(".")
+                historicalPlaceDao.updateFacts(historicalPlace.placeId, currentUserId, facts)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
 
-    private fun fetchFactsForPlaces(places: List<GeoSearchResult>) {
-        viewModelScope.launch {
-            places.forEach { place ->
-                try {
-                    val response = geminiApi.getHistoricalFacts(place.title)
-                    val listOfFacts = response!!.split(".")
-
-                    _historicalPlaces.value = _historicalPlaces.value.map { item ->
-                        if (item.geoSearchResult.pageid == place.pageid) {
-                            item.copy(historicalFacts = listOfFacts)
-                        } else {
-                            item
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
+    suspend fun markHistoricalPlaceAsNotified(placeId: String) {
+        historicalPlaceDao.markAsNotifiedForUser(placeId, currentUserId)
     }
 }
+
