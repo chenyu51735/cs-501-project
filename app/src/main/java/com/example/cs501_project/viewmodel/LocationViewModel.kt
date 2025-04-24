@@ -11,10 +11,12 @@ import com.example.cs501_project.api.GeminiApi
 import com.example.cs501_project.api.GeoSearchResult
 import com.example.cs501_project.api.WikiClient
 import com.example.cs501_project.location.LocationService
+import com.mapbox.geojson.Point
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import java.util.Locale
 
 // this data class will map the geosearch result (historical place) with the url of an image of it + f
@@ -27,6 +29,13 @@ data class HistoricalPlaceWithImage(
     val historicalFacts: List<String> = emptyList()
 )
 
+// data class for the custom map markers when user clicks map
+data class CustomMapMarker(
+    val point: Point, // lat and lon point
+    val title: String, // whatever the user wants to call it
+    val symbol: String // name of symbol without .png at end
+)
+
 // intermediary between LocationScreen and data sources (MediaWikiClient and LocationService)
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
     // needed to access location updates
@@ -35,6 +44,30 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     val currentLocation: StateFlow<Location?> = locationService.currentLocation
     // gemini api instance
     private val geminiApi = GeminiApi()
+
+    // custom map markers
+    private val _customMarkers = MutableStateFlow<List<CustomMapMarker>>(emptyList())
+    val customMarkers: StateFlow<List<CustomMapMarker>> = _customMarkers
+
+    // updating list of the markers
+    fun addCustomMarker(point: Point, title: String, symbol: String) {
+        _customMarkers.update { currentList ->
+            currentList + CustomMapMarker(point = point, title = title, symbol = symbol)
+        }
+    }
+
+    // updating a specific marker
+    fun updateCustomMarker(updatedMarker: CustomMapMarker) {
+        _customMarkers.update { currentList ->
+            currentList.map {
+                if (it.point == updatedMarker.point) { // Assuming point is a unique identifier
+                    updatedMarker
+                } else {
+                    it
+                }
+            }
+        }
+    }
 
     // mutable stateflow to hold the list of historical places from mediawiki using geo-searching
     private val _historicalPlaces = MutableStateFlow<List<HistoricalPlaceWithImage>>(emptyList())

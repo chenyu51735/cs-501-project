@@ -3,16 +3,19 @@ package com.example.cs501_project.ui.navigation
 import android.net.Uri
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.cs501_project.ui.CreateAccount
+import com.example.cs501_project.ui.CustomLocationDetails
 import com.example.cs501_project.ui.HistoricalFacts
 import com.example.cs501_project.ui.LandingScreen
 import com.example.cs501_project.ui.LocationScreen
 import com.example.cs501_project.ui.LoginForm
+import com.example.cs501_project.viewmodel.CustomMapMarker
 import com.google.gson.Gson
 import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 import com.example.cs501_project.viewmodel.LocationViewModel
@@ -44,7 +47,8 @@ fun AppNavigation(navController: NavHostController, userViewModel: UserViewModel
                 onNavigateToFacts = { historicalPlace -> // Receive the HistoricalPlaceWithImage
                     val encodedPlace = Uri.encode(gson.toJson(historicalPlace))
                     navController.navigate("historicalInfo/$encodedPlace")
-                }
+                },
+                navController = navController
             )
         }
 
@@ -62,6 +66,34 @@ fun AppNavigation(navController: NavHostController, userViewModel: UserViewModel
                 HistoricalFacts(place = historicalPlace)
             } else {
                 Text("Error: Historical place data not found.") // handle potential error
+            }
+        }
+
+        composable(
+            route = "customCardDetails/{customMarker}",
+            arguments = listOf(
+                navArgument("customMarker") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val customMarkerJson = backStackEntry.arguments?.getString("customMarker")
+
+            if (!customMarkerJson.isNullOrEmpty()) {
+                val customMarker = gson.fromJson(customMarkerJson, CustomMapMarker::class.java)
+                val previousBackStackEntry = remember(navController.previousBackStackEntry) {
+                    navController.getBackStackEntry(navController.previousBackStackEntry?.destination?.route ?: "locationScreen")
+                }
+                CustomLocationDetails(
+                    marker = customMarker,
+                    onMarkerUpdated = { updatedMarker ->
+                        val result = Uri.encode(gson.toJson(updatedMarker))
+                        previousBackStackEntry.savedStateHandle["updatedCustomMarker"] = result
+                        navController.popBackStack()
+                    }
+                )
+            } else {
+                Text("Error: Custom marker data not found.")
             }
         }
     }

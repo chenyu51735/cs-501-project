@@ -2,10 +2,12 @@ package com.example.cs501_project.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import com.google.gson.Gson
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,18 +37,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.runtime.State
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.cs501_project.viewmodel.LocationViewModel
 import com.mapbox.geojson.Point
 import coil.compose.AsyncImage
+import com.example.cs501_project.viewmodel.CustomMapMarker
 import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 
 // location screen will display all location-related information and list nearby historical places
 @Composable
-fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigateToFacts: (HistoricalPlaceWithImage) -> Unit) {
+fun LocationScreen(
+    locationViewModel: LocationViewModel = viewModel(),
+    onNavigateToFacts: (HistoricalPlaceWithImage) -> Unit,
+    navController: NavHostController
+) {
+    val gson = Gson()
     val context = LocalContext.current
 
     // state variables to track whether or not location permissions have been granted
@@ -66,8 +75,8 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
     val historicalPlaces by locationViewModel.historicalPlaces.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val currentCity by locationViewModel.currentCity.collectAsState()
+    val customMarkers by locationViewModel.customMarkers.collectAsState()
 
-    val customMarkers = remember { mutableStateListOf<Point>() } // going to hold all the marker points
     val historicalMarkerPoints = remember(historicalPlaces) { // these are the predefined suggestions markers
         historicalPlaces.map { Point.fromLngLat(it.geoSearchResult.lon, it.geoSearchResult.lat) }
     }
@@ -76,6 +85,10 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
     val initialCameraPoint = remember(currentLocation) {
         currentLocation?.let { Point.fromLngLat(it.longitude, it.latitude) }
     }
+
+    // states needed for adding custom markers
+    var isCustomMarkerDialogVisible by remember { mutableStateOf(false) }
+    var clickedPointForNewMarker by remember { mutableStateOf<Point?>(null) }
 
     // used to launch the system's permission request dialogue
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -93,6 +106,18 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
             locationPermissionLauncher.launch(
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
             )
+        }
+    }
+
+    val updatedMarkerResult: State<String?> = remember {
+        navController.currentBackStackEntry?.savedStateHandle?.getStateFlow("updatedCustomMarker", null)
+    }?.collectAsState(null) ?: remember { mutableStateOf(null) } // Use remember for mutableStateOf
+
+    LaunchedEffect(updatedMarkerResult.value) {
+        updatedMarkerResult.value?.let { encodedUpdatedMarker ->
+            navController.currentBackStackEntry?.savedStateHandle?.remove<String>("updatedCustomMarker")
+            val updatedMarker = gson.fromJson(Uri.decode(encodedUpdatedMarker), CustomMapMarker::class.java)
+            locationViewModel.updateCustomMarker(updatedMarker)
         }
     }
 
@@ -117,16 +142,22 @@ fun LocationScreen(locationViewModel: LocationViewModel = viewModel(), onNavigat
             Spacer(modifier = Modifier.height(16.dp))
             // displaying the mapbox and defining the parameters for it
             MapboxView(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(480.dp)
-                    .padding(bottom = 16.dp),
                 initialCameraPosition = initialCameraPoint,
                 predefinedMarkerLocations = historicalMarkerPoints,
                 onMapClick = { point ->
-                    customMarkers.add(point)
+                    clickedPointForNewMarker = point
+                    isCustomMarkerDialogVisible = true
                 },
                 customMarkers = customMarkers,
+                onNewCustomMarkerAdded = { point, title, symbol ->
+                    locationViewModel.addCustomMarker(point, title, symbol) // Add via ViewModel
+                    isCustomMarkerDialogVisible = false
+                    clickedPointForNewMarker = null
+                },
+                onNavigateToCardDetails = { marker ->
+                    val encodedMarker = Uri.encode(gson.toJson(marker))
+                    navController.navigate("customCardDetails/$encodedMarker")
+                }
             )
 
 
