@@ -11,7 +11,7 @@ class GeminiApi {
     )
 
     suspend fun getHistoricalFacts(place: String): String? {
-        val prompt = "Tell me five interesting facts about $place and use periods to separate them instead of bullet points"
+        val prompt = "Tell me three interesting facts about $place and use periods to separate them instead of bullet points"
         val response = geminiModel.generateContent(prompt)
         return response.text
     }

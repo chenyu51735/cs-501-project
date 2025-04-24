@@ -12,7 +12,6 @@ import com.example.cs501_project.api.GeminiApi
 import com.example.cs501_project.api.GeoSearchResult
 import com.example.cs501_project.api.WikiClient
 import com.example.cs501_project.data.database.AppDatabase
-import com.example.cs501_project.data.database.HistoricalPlaceDao
 import com.example.cs501_project.location.LocationService
 import com.example.cs501_project.model.HistoricalPlace
 import com.mapbox.geojson.Point
@@ -96,7 +95,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                             dist = 0.0
                         ),
                         imageUrl = entity.imageUrl,
-                        historicalFacts = emptyList()
+                        historicalFacts = entity.historicalFacts!!.split(".")
                     )
                 }
             }
@@ -129,16 +128,14 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     // launches a coroutine to make an api call to MediaWiki to search for historical places near coordinates
     private fun fetchNearbyHistoricalPlaces(latitude: Double, longitude: Double) {
-        Log.d("LocationViewModel", "fetchNearbyHistoricalPlaces called with: $latitude, $longitude")
         viewModelScope.launch {
             try {
                 val coordinates = "${latitude}|${longitude}"
-                Log.d("LocationViewModel", "Calling WikiClient API with coordinates: $coordinates")
                 val response = WikiClient.wikiApi.searchNearbyHistoricalPlaces(coordinates)
-                Log.d("LocationViewModel", "WikiClient API response: $response")
                 val places = response.query?.geosearch ?: emptyList()
-                Log.d("LocationViewModel", "Number of places found: ${places.size}")
+
                 places.forEach { place ->
+                    // fetching the image
                     var imageUrl: String? = null // default to null if no image
                     try {
                         val imageResponse = WikiClient.wikiApi.getPageImage(pageIds = place.pageid.toString())
@@ -146,22 +143,28 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                     } catch (e: Exception) {
                         e.printStackTrace() // Log the error, but continue
                     }
-                    Log.d(
-                        "LocationViewModel",
-                        "Place: title=${place.title}, pageid=${place.pageid}, lat=${place.lat}, lon=${place.lon}"
-                    )
+
+                    // fetching facts
+                    var facts: String? = null
+                    try {
+                        val geminiResponse = geminiApi.getHistoricalFacts(place.title)
+                        Log.d("LocationViewModel", "API response: $geminiResponse")
+                        facts = geminiResponse?.split(".")?.filter { it.isNotBlank() }?.joinToString(".")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
                     val historicalPlaceEntity = HistoricalPlace(
                         userId = currentUserId,
                         placeId = place.pageid.toString(), // use pageid as a stable ID
                         title = place.title,
                         latitude = place.lat,
                         longitude = place.lon,
-                        historicalFacts = null.toString(), // fetch facts later
+                        historicalFacts = facts,
                         pushNotificationSent = false,
                         imageUrl = imageUrl
                     )
                     historicalPlaceDao.insert(historicalPlaceEntity)
-                    fetchFactsForPlaces(historicalPlaceEntity)
                 }
             } catch (e: Exception) {
                 // handle network errors
@@ -184,18 +187,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         } catch (e: Exception) {
             e.printStackTrace()
             null
-        }
-    }
-
-    private fun fetchFactsForPlaces(historicalPlace: HistoricalPlace) {
-        viewModelScope.launch {
-            try {
-                val response = geminiApi.getHistoricalFacts(historicalPlace.title)
-                val facts = response?.split(".")?.filter { it.isNotBlank() }?.joinToString(".")
-                historicalPlaceDao.updateFacts(historicalPlace.placeId, currentUserId, facts)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
         }
     }
 

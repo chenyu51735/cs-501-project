@@ -21,7 +21,7 @@ data class HistoricalPlace(
     val title: String,
     val latitude: Double,
     val longitude: Double,
-    val historicalFacts: String,
+    val historicalFacts: String? = null,
     var pushNotificationSent: Boolean = false, // to track if a notification has been sent
     val imageUrl: String? = null
 )
