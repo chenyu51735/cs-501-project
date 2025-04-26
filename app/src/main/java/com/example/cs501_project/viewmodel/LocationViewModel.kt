@@ -13,6 +13,7 @@ import com.example.cs501_project.api.GeoSearchResult
 import com.example.cs501_project.api.WikiClient
 import com.example.cs501_project.data.database.AppDatabase
 import com.example.cs501_project.location.LocationService
+import com.example.cs501_project.model.CustomMarker
 import com.example.cs501_project.model.HistoricalPlace
 import com.mapbox.geojson.Point
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,6 +46,7 @@ data class CustomMapMarker(
 // intermediary between LocationScreen and data sources (MediaWikiClient and LocationService)
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
     private val historicalPlaceDao = AppDatabase.getDatabase(application).historicalPlaceDao()
+    private val customMarkerDao = AppDatabase.getDatabase(application).customMarkerDao()
     // needed to access location updates
     private val locationService = LocationService(application.applicationContext)
     // using locationService to access the latest location
@@ -58,19 +60,44 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     // updating list of the markers
     fun addCustomMarker(point: Point, title: String, symbol: String) {
-        _customMarkers.update { currentList ->
-            currentList + CustomMapMarker(point = point, title = title, symbol = symbol)
+        viewModelScope.launch {
+            val markerId = point.toString() // markerId will just be the point as a string
+            val newCustomMarker = CustomMarker(
+                markerId = markerId,
+                userId = currentUserId,
+                title = title,
+                latitude = point.latitude(),
+                longitude = point.longitude(),
+                imageUrl = symbol,
+                notes = "" // empty initially
+            )
+            customMarkerDao.insert(newCustomMarker)
+            _customMarkers.update { currentList ->
+                currentList + CustomMapMarker(point = point, title = title, symbol = symbol)
+            }
         }
     }
 
     // updating a specific marker
     fun updateCustomMarker(updatedMarker: CustomMapMarker) {
-        _customMarkers.update { currentList ->
-            currentList.map {
-                if (it.point == updatedMarker.point) { // assuming point is a unique identifier
-                    updatedMarker
-                } else {
-                    it
+        viewModelScope.launch {
+            val markerToUpdate = CustomMarker(
+                markerId = updatedMarker.point.toString(),
+                userId = currentUserId,
+                title = updatedMarker.title,
+                latitude = updatedMarker.point.latitude(),
+                longitude = updatedMarker.point.longitude(),
+                imageUrl = updatedMarker.symbol,
+                notes = "" // empty for now
+            )
+            customMarkerDao.insert(markerToUpdate)
+            _customMarkers.update { currentList ->
+                currentList.map {
+                    if (it.point == updatedMarker.point) { // assuming point is a unique identifier
+                        updatedMarker
+                    } else {
+                        it
+                    }
                 }
             }
         }
