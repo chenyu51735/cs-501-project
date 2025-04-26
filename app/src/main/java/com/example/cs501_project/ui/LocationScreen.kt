@@ -3,6 +3,7 @@ package com.example.cs501_project.ui
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -38,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -78,12 +80,16 @@ fun LocationScreen(
     val customMarkers by locationViewModel.customMarkers.collectAsState()
 
     val historicalMarkerPoints = remember(historicalPlaces) { // these are the predefined suggestions markers
-        historicalPlaces.map { Point.fromLngLat(it.geoSearchResult.lon, it.geoSearchResult.lat) }
+        derivedStateOf { // using derived state of to stabilize these values
+            historicalPlaces.map { Point.fromLngLat(it.geoSearchResult.lon, it.geoSearchResult.lat) }
+        }
     }
 
     // so the mapbox view knows where to zoom in
     val initialCameraPoint = remember(currentLocation) {
-        currentLocation?.let { Point.fromLngLat(it.longitude, it.latitude) }
+        derivedStateOf {
+            currentLocation?.let { Point.fromLngLat(it.longitude, it.latitude) }
+        }
     }
 
     // states needed for adding custom markers
@@ -111,7 +117,7 @@ fun LocationScreen(
 
     val updatedMarkerResult: State<String?> = remember {
         navController.currentBackStackEntry?.savedStateHandle?.getStateFlow("updatedCustomMarker", null)
-    }?.collectAsState(null) ?: remember { mutableStateOf(null) } // Use remember for mutableStateOf
+    }?.collectAsState(null) ?: remember { mutableStateOf(null) }
 
     LaunchedEffect(updatedMarkerResult.value) {
         updatedMarkerResult.value?.let { encodedUpdatedMarker ->
@@ -142,8 +148,8 @@ fun LocationScreen(
             Spacer(modifier = Modifier.height(16.dp))
             // displaying the mapbox and defining the parameters for it
             MapboxView(
-                initialCameraPosition = initialCameraPoint,
-                predefinedMarkerLocations = historicalMarkerPoints,
+                initialCameraPosition = initialCameraPoint.value,
+                predefinedMarkerLocations = historicalMarkerPoints.value,
                 onMapClick = { point ->
                     clickedPointForNewMarker = point
                     isCustomMarkerDialogVisible = true
@@ -167,6 +173,7 @@ fun LocationScreen(
                     .padding(16.dp),
                 textAlign = TextAlign.Center,
             )
+            Log.d("LocationScreen", "historicalPlaces.size = ${historicalPlaces.size}")
             if (historicalPlaces.isNotEmpty()) {
                 LazyColumn {
                     items(historicalPlaces) { place ->
@@ -179,14 +186,7 @@ fun LocationScreen(
                                 .fillMaxSize()
                                 .padding(16.dp)
                                 .clickable {
-                                    // when you click on a card it navigates to a new screen with info
-                                    onNavigateToFacts(
-                                        HistoricalPlaceWithImage(
-                                            geoSearchResult = place.geoSearchResult,
-                                            imageUrl = place.imageUrl,
-                                            historicalFacts = place.historicalFacts
-                                        )
-                                    )
+                                    onNavigateToFacts(place)
                                 }
                         ) {
                             Row(

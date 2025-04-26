@@ -58,5 +58,4 @@ fun HistoricalFacts(place: HistoricalPlaceWithImage) {
             }
         }
     }
-    // maybe add a user input card, having a preset number of symbols?
 }
