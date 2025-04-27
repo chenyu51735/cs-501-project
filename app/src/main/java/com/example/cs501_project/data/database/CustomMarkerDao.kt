@@ -17,4 +17,7 @@ interface CustomMarkerDao {
 
     @Query("SELECT * FROM custom_markers WHERE userId = :userId")
     fun getCustomMarkersForUser(userId: Int): Flow<List<CustomMarker>>
+
+    @Query("SELECT * FROM custom_markers WHERE userId = :userId")
+    suspend fun getCustomMarkersForUserList(userId: Int): List<CustomMarker>
 }

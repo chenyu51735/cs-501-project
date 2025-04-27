@@ -40,7 +40,8 @@ data class HistoricalPlaceWithImage(
 data class CustomMapMarker(
     val point: Point, // lat and lon point
     val title: String, // whatever the user wants to call it
-    val symbol: String // name of symbol without .png at end
+    val symbol: String, // name of symbol without .png at end
+    val notes: String
 )
 
 // intermediary between LocationScreen and data sources (MediaWikiClient and LocationService)
@@ -58,6 +59,31 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private val _customMarkers = MutableStateFlow<List<CustomMapMarker>>(emptyList())
     val customMarkers: StateFlow<List<CustomMapMarker>> = _customMarkers
 
+    private val currentUserId = 1
+
+    //private val currentUserId = 1 // Replace with your actual user ID retrieval NEED TO CHANGE, maybe after remote database auth?
+    // once the viewmodel is created, it starts listening for location updates from LocationService
+    init {
+        startLocationUpdates()
+        loadCustomMarkers()
+    }
+
+    private fun loadCustomMarkers() {
+        viewModelScope.launch {
+            val customMarkerEntities = customMarkerDao.getCustomMarkersForUserList(currentUserId)
+            val mapMarkers = customMarkerEntities.map { entity ->
+                CustomMapMarker(
+                    point = Point.fromLngLat(entity.longitude, entity.latitude),
+                    title = entity.title,
+                    symbol = entity.imageUrl,
+                    notes = entity.notes
+                )
+            }
+            _customMarkers.value = mapMarkers
+        }
+    }
+
+
     // updating list of the markers
     fun addCustomMarker(point: Point, title: String, symbol: String) {
         viewModelScope.launch {
@@ -73,7 +99,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             )
             customMarkerDao.insert(newCustomMarker)
             _customMarkers.update { currentList ->
-                currentList + CustomMapMarker(point = point, title = title, symbol = symbol)
+                currentList + CustomMapMarker(point = point, title = title, symbol = symbol, notes = "")
             }
         }
     }
@@ -88,7 +114,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                 latitude = updatedMarker.point.latitude(),
                 longitude = updatedMarker.point.longitude(),
                 imageUrl = updatedMarker.symbol,
-                notes = "" // empty for now
+                notes = updatedMarker.notes
             )
             customMarkerDao.insert(markerToUpdate)
             _customMarkers.update { currentList ->
@@ -105,8 +131,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     private val _currentCity = MutableStateFlow<String?>(null)
     val currentCity: StateFlow<String?> = _currentCity
-
-    private val currentUserId: Int = 1 // Replace with your actual user ID retrieval NEED TO CHANGE, maybe after remote database auth?
 
     val historicalPlaces: StateFlow<List<HistoricalPlaceWithImage>> =
         historicalPlaceDao.getAllHistoricalPlacesForUser(currentUserId)
@@ -131,11 +155,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                 started = SharingStarted.WhileSubscribed(5000),
                 initialValue = emptyList()
             )
-
-    // once the viewmodel is created, it starts listening for location updates from LocationService
-    init {
-        startLocationUpdates()
-    }
 
     // launches a coroutine that collects the Flow of location updates from LocationService
     // whenever a new location is received, it will fetch nearby historical places for that location
