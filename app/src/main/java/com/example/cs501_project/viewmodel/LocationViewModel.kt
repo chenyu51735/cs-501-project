@@ -76,7 +76,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                     point = Point.fromLngLat(entity.longitude, entity.latitude),
                     title = entity.title,
                     symbol = entity.imageUrl,
-                    notes = ""
+                    notes = entity.notes
                 )
             }
             _customMarkers.value = mapMarkers
