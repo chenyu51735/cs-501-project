@@ -40,7 +40,8 @@ data class HistoricalPlaceWithImage(
 data class CustomMapMarker(
     val point: Point, // lat and lon point
     val title: String, // whatever the user wants to call it
-    val symbol: String // name of symbol without .png at end
+    val symbol: String, // name of symbol without .png at end
+    val notes: String
 )
 
 // intermediary between LocationScreen and data sources (MediaWikiClient and LocationService)
@@ -74,7 +75,8 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                 CustomMapMarker(
                     point = Point.fromLngLat(entity.longitude, entity.latitude),
                     title = entity.title,
-                    symbol = entity.imageUrl
+                    symbol = entity.imageUrl,
+                    notes = ""
                 )
             }
             _customMarkers.value = mapMarkers
@@ -97,7 +99,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             )
             customMarkerDao.insert(newCustomMarker)
             _customMarkers.update { currentList ->
-                currentList + CustomMapMarker(point = point, title = title, symbol = symbol)
+                currentList + CustomMapMarker(point = point, title = title, symbol = symbol, notes = "")
             }
         }
     }
@@ -112,7 +114,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                 latitude = updatedMarker.point.latitude(),
                 longitude = updatedMarker.point.longitude(),
                 imageUrl = updatedMarker.symbol,
-                notes = "" // empty for now
+                notes = updatedMarker.notes
             )
             customMarkerDao.insert(markerToUpdate)
             _customMarkers.update { currentList ->

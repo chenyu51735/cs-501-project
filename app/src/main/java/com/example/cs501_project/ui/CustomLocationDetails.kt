@@ -3,11 +3,13 @@ package com.example.cs501_project.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +25,7 @@ fun CustomLocationDetails(
     onMarkerUpdated: (CustomMapMarker) -> Unit // callback to send marker back
 ) {
     var isUpdateDialogVisible by remember { mutableStateOf(false) }
+    var userNotes by rememberSaveable { mutableStateOf(marker.notes) }
 
     Column {
         Text(
@@ -37,6 +40,23 @@ fun CustomLocationDetails(
 
         Button(onClick = { isUpdateDialogVisible = true }) {
             Text("Update Marker")
+        }
+
+        OutlinedTextField(
+            value = userNotes,
+            onValueChange = { userNotes = it },
+            label = { Text("Notes") },
+            modifier = Modifier.padding(16.dp)
+        )
+
+        Button(
+            onClick = {
+                // update the marker with the new notes
+                val updatedMarker = marker.copy(notes = userNotes)
+                onMarkerUpdated(updatedMarker)
+            }
+        ) {
+            Text("Save Notes")
         }
 
         if (isUpdateDialogVisible) {
