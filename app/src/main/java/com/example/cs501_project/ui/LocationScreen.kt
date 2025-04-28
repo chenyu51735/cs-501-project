@@ -50,6 +50,7 @@ import com.example.cs501_project.ui.navigation.NavBar
 import com.example.cs501_project.viewmodel.CustomMapMarker
 import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 import com.example.cs501_project.viewmodel.LocationViewModel
+import com.example.cs501_project.viewmodel.SettingsViewModel
 import com.google.gson.Gson
 import com.mapbox.geojson.Point
 
@@ -58,11 +59,12 @@ import com.mapbox.geojson.Point
 fun LocationScreen(
     locationViewModel: LocationViewModel = viewModel(),
     onNavigateToFacts: (HistoricalPlaceWithImage) -> Unit,
+    settingsViewModel: SettingsViewModel,
     navController: NavHostController
 ) {
     val gson = Gson()
     val context = LocalContext.current
-
+    val fontSize = settingsViewModel.fontSize.collectAsState().value
     // state variables to track whether or not location permissions have been granted
     var hasFineLocationPermission by remember {
         mutableStateOf(
@@ -74,7 +76,6 @@ fun LocationScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         )
     }
-
     // observes state flows from the viewmodel and updates ui when a new location is received
     val historicalPlaces by locationViewModel.historicalPlaces.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
@@ -144,7 +145,7 @@ fun LocationScreen(
             if (currentLocation != null) {
                 Text(
                     text = "$currentCity",
-                    fontSize = 30.sp,
+                    fontSize = fontSize.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .padding(16.dp),
@@ -215,6 +216,7 @@ fun LocationScreen(
                                         modifier = Modifier
                                             .padding(16.dp),
                                         textAlign = TextAlign.Center,
+                                        fontSize = fontSize.sp,
                                     )
                                 }
                             }

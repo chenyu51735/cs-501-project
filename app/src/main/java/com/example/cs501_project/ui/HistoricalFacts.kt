@@ -22,20 +22,23 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.cs501_project.ui.navigation.NavBar
 import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
+import com.example.cs501_project.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoricalFacts(place: HistoricalPlaceWithImage,
-                    navController: NavHostController
+fun HistoricalFacts(place: HistoricalPlaceWithImage, navController: NavHostController, settingsViewModel: SettingsViewModel
 ) {
+    val fontSize = settingsViewModel.fontSize.collectAsState().value
     // Navbar
     Scaffold(
         topBar = {
@@ -83,7 +86,8 @@ fun HistoricalFacts(place: HistoricalPlaceWithImage,
                             .fillMaxSize()
                             .padding(16.dp)
                     ) {
-                        Text(text = fact)
+                        Text(text = fact, fontSize = fontSize.sp)
+
                     }
                 }
             }
