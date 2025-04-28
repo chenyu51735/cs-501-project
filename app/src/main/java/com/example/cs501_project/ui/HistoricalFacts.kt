@@ -51,7 +51,7 @@ fun HistoricalFacts(place: HistoricalPlaceWithImage, navController: NavHostContr
                         )
                     }
                 },
-                title = { Text(text = place.geoSearchResult.title) }
+                title = { Text(text = place.geoSearchResult.title, fontSize = fontSize.sp) }
             )
         },
         bottomBar = { NavBar(navController) }
