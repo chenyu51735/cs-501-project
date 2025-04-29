@@ -54,7 +54,6 @@ fun MapboxView(
     onMapClick: ((Point) -> Unit)? = null, // callback for map clicks
     customMarkers: List<CustomMapMarker>,
     onNewCustomMarkerAdded: (Point, String, String) -> Unit,
-    onNavigateToCardDetails: (CustomMapMarker) -> Unit
 ) {
     // mutable state that holds android view that displays map and the remember ensures MapView instance is retained across recompositions
     val mapboxMapView = remember { mutableStateOf<MapView?>(null) }
@@ -175,26 +174,23 @@ fun MapboxView(
                                 Log.e("MapboxView", "Error loading image: ${customMarker.symbol}", e)
                             }
                         }
+                        var iconSize = 0.1
+                        if (customMarker.symbol == "flower.png" ||
+                            customMarker.symbol == "movie.png" ||
+                            customMarker.symbol == "park.png" ||
+                            customMarker.symbol == "plane.png") { // symbols too big
+                            iconSize = 0.03
+                        }
                         pointAnnotationManager.value?.create(
                             PointAnnotationOptions()
                                 .withPoint(customMarker.point)
                                 .withIconImage(customMarker.symbol)
-                                .withIconSize(0.1)
+                                .withIconSize(iconSize)
                         )
                     }
                 }
             }
         )
-
-        if (customMarkers.isNotEmpty()) {
-            LazyColumn {
-                items(customMarkers) { marker ->
-                    CustomLocationCard(marker) {
-                        onNavigateToCardDetails(marker)
-                    }
-                }
-            }
-        }
     }
 }
 

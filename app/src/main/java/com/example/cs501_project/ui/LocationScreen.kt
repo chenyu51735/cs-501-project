@@ -20,7 +20,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
@@ -141,7 +144,7 @@ fun LocationScreen(
         bottomBar = { NavBar(navController) }
     ) { innerPadding ->
         // displaying the historical places
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -150,92 +153,99 @@ fun LocationScreen(
             verticalArrangement = Arrangement.Center
         ) {
             if (currentLocation != null) {
-                Text(
-                    text = "Welcome to $currentCity, $username",
-                    fontSize = fontSize.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .padding(16.dp),
-                    textAlign = TextAlign.Center,
-                )
+                item {
+                    Text(
+                        text = "Welcome to $currentCity, $username",
+                        fontSize = fontSize.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(16.dp),
+                        textAlign = TextAlign.Center,
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
-                // displaying the mapbox and defining the parameters for it
-                MapboxView(
-                    initialCameraPosition = initialCameraPoint.value,
-                    predefinedMarkerLocations = historicalMarkerPoints.value,
-                    onMapClick = { point ->
-                        clickedPointForNewMarker = point
-                        isCustomMarkerDialogVisible = true
-                    },
-                    customMarkers = customMarkers,
-                    onNewCustomMarkerAdded = { point, title, symbol ->
-                        locationViewModel.addCustomMarker(point, title, symbol) // Add via ViewModel
-                        isCustomMarkerDialogVisible = false
-                        clickedPointForNewMarker = null
-                    },
-                    onNavigateToCardDetails = { marker ->
-                        val encodedMarker = Uri.encode(gson.toJson(marker))
-                        navController.navigate("customCardDetails/$encodedMarker")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // displaying the mapbox and defining the parameters for it
+                    MapboxView(
+                        initialCameraPosition = initialCameraPoint.value,
+                        predefinedMarkerLocations = historicalMarkerPoints.value,
+                        onMapClick = { point ->
+                            clickedPointForNewMarker = point
+                            isCustomMarkerDialogVisible = true
+                        },
+                        customMarkers = customMarkers,
+                        onNewCustomMarkerAdded = { point, title, symbol ->
+                            locationViewModel.addCustomMarker(point, title, symbol) // Add via ViewModel
+                            isCustomMarkerDialogVisible = false
+                            clickedPointForNewMarker = null
+                        }
+                    )
+
+
+                    Text(
+                        text = "Explore these places next... \uD83D\uDDFA\uFE0F",  // added a map emoji
+                        modifier = Modifier
+                            .padding(16.dp),
+                        textAlign = TextAlign.Center,
+                    )
+                    Log.d("LocationScreen", "historicalPlaces.size = ${historicalPlaces.size}")
+                }
+                if (customMarkers.isNotEmpty()) {
+                    items(customMarkers) { marker ->
+                        CustomLocationCard(marker) {
+                            navController.navigate("customCardDetails/${Uri.encode(gson.toJson(marker))}")
+                        }
                     }
-                )
-
-
-                Text(
-                    text = "Explore these places next... \uD83D\uDDFA\uFE0F",  // added a map emoji
-                    modifier = Modifier
-                        .padding(16.dp),
-                    textAlign = TextAlign.Center,
-                )
-                Log.d("LocationScreen", "historicalPlaces.size = ${historicalPlaces.size}")
+                }
                 if (historicalPlaces.isNotEmpty()) {
-                    LazyColumn {
-                        items(historicalPlaces) { place ->
-                            OutlinedCard(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface,
-                                ),
-                                border = BorderStroke(1.dp, Color.Black),
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp)
-                                    .clickable {
-                                        onNavigateToFacts(place)
-                                    }
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .padding(24.dp)
-                                        .fillMaxWidth()
-                                ) {
-                                    if (!place.imageUrl.isNullOrEmpty()) {
-                                        // if no image available, have a different format for the cards
-                                        AsyncImage(
-                                            model = place.imageUrl,
-                                            contentDescription = place.geoSearchResult.title,
-                                            modifier = Modifier.size(100.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                    }
-                                    Text(
-                                        text = place.geoSearchResult.title,
-                                        modifier = Modifier
-                                            .padding(16.dp),
-                                        textAlign = TextAlign.Center,
-                                        fontSize = fontSize.sp,
-                                    )
+                    items(historicalPlaces) { place ->
+                        OutlinedCard(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                            ),
+                            border = BorderStroke(1.dp, Color.Black),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                                .clickable {
+                                    onNavigateToFacts(place)
                                 }
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .padding(24.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                if (!place.imageUrl.isNullOrEmpty()) {
+                                    // if no image available, have a different format for the cards
+                                    AsyncImage(
+                                        model = place.imageUrl,
+                                        contentDescription = place.geoSearchResult.title,
+                                        modifier = Modifier.size(100.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
+                                Text(
+                                    text = place.geoSearchResult.title,
+                                    modifier = Modifier
+                                        .padding(16.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = fontSize.sp,
+                                )
                             }
                         }
                     }
                 } else {
-                    Text("No historical places found nearby 😞")
+                    item {
+                        Text("No historical places found nearby 😞")
+                    }
                 }
             } else if (!hasFineLocationPermission || !hasCoarseLocationPermission) {
-                Text("Location permissions not granted.")
+                item { Text("Location permissions not granted.") }
             } else {
-                Text("Getting location...") // maybe want to consider changing this to a loading animation
+                item { CircularProgressIndicator(modifier = Modifier.size(50.dp)) }
+                item { Spacer(modifier = Modifier.width(16.dp)) }
+                item { Text("Getting location...") }
             }
         }
     }
