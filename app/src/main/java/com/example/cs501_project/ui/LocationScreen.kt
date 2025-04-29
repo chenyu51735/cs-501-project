@@ -54,8 +54,6 @@ import com.example.cs501_project.viewmodel.CustomMapMarker
 import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 import com.example.cs501_project.viewmodel.LocationViewModel
 import com.example.cs501_project.viewmodel.SettingsViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
 import com.google.gson.Gson
 import com.mapbox.geojson.Point
 
@@ -95,7 +93,7 @@ fun LocationScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         )
     }
-    val notificationHandler = NotificationHandler(context)
+    val notificationHandler = NotificationHandler(context, locationViewModel)
 
     // observes state flows from the viewmodel and updates ui when a new location is received
     val historicalPlaces by locationViewModel.historicalPlaces.collectAsState()
@@ -168,8 +166,8 @@ fun LocationScreen(
                 // testing the notification
                 item {
                     Button(onClick = {
-                        notificationHandler.showSimpleNotification()
-                    }) { Text(text = "Simple notification") }
+                        notificationHandler.showFactNotification()
+                    }) { Text(text = "Get a fact") }
                 }
                 item {
                     Text(
