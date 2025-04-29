@@ -63,6 +63,12 @@ fun LocationScreen(
     val gson = Gson()
     val context = LocalContext.current
 
+    val navBackStackEntry = navController.currentBackStackEntry // getting the username from the login form nav
+    val username = remember {
+        navBackStackEntry?.arguments?.getString("username") ?: ""
+    }
+    Log.d("LocationScreen", "Username is: $username")
+
     // state variables to track whether or not location permissions have been granted
     var hasFineLocationPermission by remember {
         mutableStateOf(
@@ -143,7 +149,7 @@ fun LocationScreen(
         ) {
             if (currentLocation != null) {
                 Text(
-                    text = "$currentCity",
+                    text = "Welcome to $currentCity, $username",
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
