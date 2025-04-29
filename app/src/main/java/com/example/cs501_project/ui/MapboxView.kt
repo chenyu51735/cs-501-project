@@ -174,11 +174,18 @@ fun MapboxView(
                                 Log.e("MapboxView", "Error loading image: ${customMarker.symbol}", e)
                             }
                         }
+                        var iconSize = 0.1
+                        if (customMarker.symbol == "flower.png" ||
+                            customMarker.symbol == "movie.png" ||
+                            customMarker.symbol == "park.png" ||
+                            customMarker.symbol == "plane.png") { // symbols too big
+                            iconSize = 0.03
+                        }
                         pointAnnotationManager.value?.create(
                             PointAnnotationOptions()
                                 .withPoint(customMarker.point)
                                 .withIconImage(customMarker.symbol)
-                                .withIconSize(0.1)
+                                .withIconSize(iconSize)
                         )
                     }
                 }
