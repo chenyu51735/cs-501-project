@@ -14,8 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.cs501_project.ui.navigation.NavBar
+import com.example.cs501_project.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
@@ -23,7 +25,8 @@ fun SettingsScreen(
     onFontSizeChange: (Float) -> Unit,
     darkMode: Boolean,
     onDarkModeToggle: (Boolean) -> Unit,
-    navController: NavHostController
+    navController: NavHostController,
+    settingsViewModel: SettingsViewModel
 ) {
     Scaffold(
         bottomBar = { NavBar(navController) }
@@ -35,10 +38,10 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text(text = "Settings", style = MaterialTheme.typography.headlineSmall)
+            Text(text = "Settings", style = MaterialTheme.typography.headlineSmall, fontSize = fontSize.sp)
 
             Column {
-                Text(text = "Font size: ${fontSize.toInt()}sp")
+                Text(text = "Font size: ${fontSize.toInt()}sp", fontSize = fontSize.sp)
                 Slider(
                     value = fontSize,
                     onValueChange = onFontSizeChange,
@@ -50,7 +53,7 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(text = "Dark mode")
+                Text(text = "Dark mode", fontSize = fontSize.sp)
                 Switch(checked = darkMode, onCheckedChange = onDarkModeToggle)
             }
         }
