@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -48,10 +49,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.cs501_project.ui.navigation.NavBar
+import com.example.cs501_project.ui.notification.NotificationHandler
 import com.example.cs501_project.viewmodel.CustomMapMarker
 import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 import com.example.cs501_project.viewmodel.LocationViewModel
 import com.example.cs501_project.viewmodel.SettingsViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.gson.Gson
 import com.mapbox.geojson.Point
 
@@ -85,6 +89,14 @@ fun LocationScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         )
     }
+    // permission for posting notification
+    var hasNotificationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val notificationHandler = NotificationHandler(context)
+
     // observes state flows from the viewmodel and updates ui when a new location is received
     val historicalPlaces by locationViewModel.historicalPlaces.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
@@ -115,6 +127,7 @@ fun LocationScreen(
             // checking to see if we have fine location and coarse location permissions
             hasFineLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
             hasCoarseLocationPermission = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+            hasNotificationPermission = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
         }
     )
 
@@ -152,6 +165,12 @@ fun LocationScreen(
             verticalArrangement = Arrangement.Center
         ) {
             if (currentLocation != null) {
+                // testing the notification
+                item {
+                    Button(onClick = {
+                        notificationHandler.showSimpleNotification()
+                    }) { Text(text = "Simple notification") }
+                }
                 item {
                     Text(
                         text = "Welcome to $currentCity, ${username.value}",
