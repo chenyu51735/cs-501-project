@@ -54,7 +54,6 @@ fun MapboxView(
     onMapClick: ((Point) -> Unit)? = null, // callback for map clicks
     customMarkers: List<CustomMapMarker>,
     onNewCustomMarkerAdded: (Point, String, String) -> Unit,
-    onNavigateToCardDetails: (CustomMapMarker) -> Unit
 ) {
     // mutable state that holds android view that displays map and the remember ensures MapView instance is retained across recompositions
     val mapboxMapView = remember { mutableStateOf<MapView?>(null) }
@@ -185,16 +184,6 @@ fun MapboxView(
                 }
             }
         )
-
-        if (customMarkers.isNotEmpty()) {
-            LazyColumn {
-                items(customMarkers) { marker ->
-                    CustomLocationCard(marker) {
-                        onNavigateToCardDetails(marker)
-                    }
-                }
-            }
-        }
     }
 }
 
