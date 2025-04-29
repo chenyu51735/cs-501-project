@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
@@ -242,7 +243,9 @@ fun LocationScreen(
             } else if (!hasFineLocationPermission || !hasCoarseLocationPermission) {
                 item { Text("Location permissions not granted.") }
             } else {
-                item { Text("Getting location...") }// maybe want to consider changing this to a loading animation
+                item { CircularProgressIndicator(modifier = Modifier.size(50.dp)) }
+                item { Spacer(modifier = Modifier.width(16.dp)) }
+                item { Text("Getting location...") }
             }
         }
     }
