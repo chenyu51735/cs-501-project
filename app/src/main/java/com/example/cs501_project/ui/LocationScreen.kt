@@ -20,8 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -69,10 +67,11 @@ fun LocationScreen(
     val context = LocalContext.current
 
     val navBackStackEntry = navController.currentBackStackEntry // getting the username from the login form nav
-    val username = remember {
+    val initialUsername = remember { // storing from argument into separate val so it survives nav changes
         navBackStackEntry?.arguments?.getString("username") ?: ""
     }
-    Log.d("LocationScreen", "Username is: $username")
+    val username = remember { mutableStateOf(initialUsername) }
+    Log.d("LocationScreen", "Username is: ${username.value}")
 
     val fontSize = settingsViewModel.fontSize.collectAsState().value
     // state variables to track whether or not location permissions have been granted
@@ -155,7 +154,7 @@ fun LocationScreen(
             if (currentLocation != null) {
                 item {
                     Text(
-                        text = "Welcome to $currentCity, $username",
+                        text = "Welcome to $currentCity, ${username.value}",
                         fontSize = fontSize.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -180,14 +179,6 @@ fun LocationScreen(
                         }
                     )
 
-
-                    Text(
-                        text = "Explore these places next... \uD83D\uDDFA\uFE0F",  // added a map emoji
-                        modifier = Modifier
-                            .padding(16.dp),
-                        textAlign = TextAlign.Center,
-                    )
-                    Log.d("LocationScreen", "historicalPlaces.size = ${historicalPlaces.size}")
                 }
                 if (customMarkers.isNotEmpty()) {
                     items(customMarkers) { marker ->
@@ -196,6 +187,14 @@ fun LocationScreen(
                         }
                     }
                 }
+
+                item { Text(
+                    text = "Explore these places next... \uD83D\uDDFA\uFE0F",  // added a map emoji
+                    modifier = Modifier
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center,
+                ) }
+
                 if (historicalPlaces.isNotEmpty()) {
                     items(historicalPlaces) { place ->
                         OutlinedCard(
@@ -225,13 +224,20 @@ fun LocationScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                 }
-                                Text(
-                                    text = place.geoSearchResult.title,
-                                    modifier = Modifier
-                                        .padding(16.dp),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = fontSize.sp,
-                                )
+                                Column {
+                                    Text(
+                                        text = place.geoSearchResult.title,
+                                        textAlign = TextAlign.Center,
+                                        fontSize = fontSize.sp,
+                                    )
+                                    Text(
+                                        text = "Distance from you: " + place.geoSearchResult.dist.toString(),
+                                        modifier = Modifier
+                                            .padding(2.dp),
+                                        textAlign = TextAlign.Center,
+                                        fontSize = fontSize.sp,
+                                    )
+                                }
                             }
                         }
                     }
