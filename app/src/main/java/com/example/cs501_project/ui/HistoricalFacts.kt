@@ -2,12 +2,9 @@ package com.example.cs501_project.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -26,6 +23,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -57,7 +55,7 @@ fun HistoricalFacts(place: HistoricalPlaceWithImage, navController: NavHostContr
         bottomBar = { NavBar(navController) }
     ) { innerPadding ->
         // will take in a place and display its historical information
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(16.dp)
                 .padding(innerPadding)
@@ -65,32 +63,40 @@ fun HistoricalFacts(place: HistoricalPlaceWithImage, navController: NavHostContr
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            item {
             if (!place.imageUrl.isNullOrEmpty()) {
                 // if no image available, have a different format for the cards
                 AsyncImage(
                     model = place.imageUrl,
                     contentDescription = place.geoSearchResult.title,
-                    modifier = Modifier.size(200.dp)
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .size(220.dp)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
             }
-
-            LazyColumn {
+            }
+            item {
+                Text(
+                    text = "Historical Facts",
+                    fontSize = (fontSize + 2).sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
                 items(place.historicalFacts) { fact ->
                     OutlinedCard(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface,
                         ),
-                        border = BorderStroke(1.dp, Color.Black),
+                        border = BorderStroke(1.dp, Color.Gray),
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(16.dp)
+                            .padding(vertical = 8.dp)
                     ) {
-                        Text(text = fact, fontSize = fontSize.sp)
+                        Text(text = fact, fontSize = fontSize.sp, modifier = Modifier.padding(16.dp), lineHeight = (fontSize + 6).sp)
 
                     }
                 }
-            }
         }
     }
 }
