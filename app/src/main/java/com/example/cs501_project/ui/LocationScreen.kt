@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.CardDefaults
@@ -58,6 +59,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.cs501_project.ui.navigation.NavBar
+import com.example.cs501_project.ui.notification.NotificationHandler
 import com.example.cs501_project.viewmodel.CustomMapMarker
 import com.example.cs501_project.viewmodel.HistoricalPlaceWithImage
 import com.example.cs501_project.viewmodel.LocationViewModel
@@ -76,12 +78,6 @@ fun LocationScreen(
     val gson = Gson()
     val context = LocalContext.current
 
-    val navBackStackEntry = navController.currentBackStackEntry // getting the username from the login form nav
-    val initialUsername = remember { // storing from argument into separate val so it survives nav changes
-        navBackStackEntry?.arguments?.getString("username") ?: ""
-    }
-    val username = remember { mutableStateOf(initialUsername) }
-    Log.d("LocationScreen", "Username is: ${username.value}")
 
     val fontSize = settingsViewModel.fontSize.collectAsState().value
     // state variables to track whether or not location permissions have been granted
@@ -95,11 +91,20 @@ fun LocationScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         )
     }
+    // permission for posting notification
+    var hasNotificationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val notificationHandler = NotificationHandler(context, locationViewModel)
+
     // observes state flows from the viewmodel and updates ui when a new location is received
     val historicalPlaces by locationViewModel.historicalPlaces.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val currentCity by locationViewModel.currentCity.collectAsState()
     val customMarkers by locationViewModel.customMarkers.collectAsState()
+    val currentUsername = locationViewModel.currentUsername
 
     val historicalMarkerPoints = remember(historicalPlaces) { // these are the predefined suggestions markers
         derivedStateOf { // using derived state of to stabilize these values
@@ -125,6 +130,7 @@ fun LocationScreen(
             // checking to see if we have fine location and coarse location permissions
             hasFineLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
             hasCoarseLocationPermission = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+            hasNotificationPermission = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
         }
     )
 
@@ -162,9 +168,15 @@ fun LocationScreen(
             verticalArrangement = Arrangement.Center
         ) {
             if (currentLocation != null) {
+                // testing the notification
+                item {
+                    Button(onClick = {
+                        notificationHandler.showFactNotification()
+                    }) { Text(text = "Get a fact") }
+                }
                 item {
                     Text(
-                        text = "Welcome to $currentCity, ${username.value}",
+                        text = "Welcome to $currentCity, $currentUsername!",
                         fontSize = fontSize.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier

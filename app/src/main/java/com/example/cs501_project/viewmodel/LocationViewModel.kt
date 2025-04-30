@@ -15,7 +15,9 @@ import com.example.cs501_project.data.database.AppDatabase
 import com.example.cs501_project.location.LocationService
 import com.example.cs501_project.model.CustomMarker
 import com.example.cs501_project.model.HistoricalPlace
+import com.mapbox.common.toValue
 import com.mapbox.geojson.Point
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +50,7 @@ data class CustomMapMarker(
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
     private val historicalPlaceDao = AppDatabase.getDatabase(application).historicalPlaceDao()
     private val customMarkerDao = AppDatabase.getDatabase(application).customMarkerDao()
+    private val userDao = AppDatabase.getDatabase(application).userDao()
     // needed to access location updates
     private val locationService = LocationService(application.applicationContext)
     // using locationService to access the latest location
@@ -59,13 +62,21 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private val _customMarkers = MutableStateFlow<List<CustomMapMarker>>(emptyList())
     val customMarkers: StateFlow<List<CustomMapMarker>> = _customMarkers
 
-    private val currentUserId = 1
+    private val currentUserId = 1 // hard-coded user id because there's only ever one user in database
 
-    //private val currentUserId = 1 // Replace with your actual user ID retrieval NEED TO CHANGE, maybe after remote database auth?
+    var currentUsername: String = ""
+
     // once the viewmodel is created, it starts listening for location updates from LocationService
     init {
         startLocationUpdates()
         loadCustomMarkers()
+        loadUsername()
+    }
+
+    private fun loadUsername() {
+        viewModelScope.launch {
+            currentUsername = userDao.getUsernameFromUserId(1).username
+        }
     }
 
     private fun loadCustomMarkers() {

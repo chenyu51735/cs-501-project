@@ -37,14 +37,14 @@ fun AppNavigation(navController: NavHostController, userViewModel: UserViewModel
         }
 
         composable(route = "login") {
-            LoginForm(viewModel = userViewModel, onNavigateToCreateAccount = { navController.navigate("createAccount") }, onNavigateToLocationScreen = { username -> navController.navigate("locationScreen?username=$username") })
+            LoginForm(viewModel = userViewModel, onNavigateToCreateAccount = { navController.navigate("createAccount") }, onNavigateToLocationScreen = { navController.navigate("locationScreen") })
         }
 
         composable(route = "createAccount") {
             CreateAccount(viewModel = userViewModel, onNavigateToLogin = { navController.popBackStack() })
         }
 
-        composable(route = "locationScreen?username={username}") {
+        composable(route = "locationScreen") {
             LocationScreen(
                 locationViewModel = locationViewModel,
                 settingsViewModel = settingsViewModel,
