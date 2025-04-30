@@ -6,6 +6,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,20 +18,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cs501_project.viewmodel.CustomMapMarker
+import com.example.cs501_project.viewmodel.SettingsViewModel
 
 // when a user clicks on the card of their own custom marked location, lead them to this screen
 @Composable
 fun CustomLocationDetails(
     marker: CustomMapMarker,
-    onMarkerUpdated: (CustomMapMarker) -> Unit // callback to send marker back
+    onMarkerUpdated: (CustomMapMarker) -> Unit, // callback to send marker back
+    settingsViewModel: SettingsViewModel
 ) {
+    val fontSize = settingsViewModel.fontSize.collectAsState().value
     var isUpdateDialogVisible by remember { mutableStateOf(false) }
     var userNotes by rememberSaveable { mutableStateOf(marker.notes) }
 
     Column {
         Text(
             text = marker.title,
-            fontSize = 30.sp,
+            fontSize = fontSize.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(16.dp),
@@ -45,7 +49,7 @@ fun CustomLocationDetails(
         OutlinedTextField(
             value = userNotes,
             onValueChange = { userNotes = it },
-            label = { Text("Notes") },
+            label = { Text(text = "Notes", fontSize = fontSize.sp) },
             modifier = Modifier.padding(16.dp)
         )
 
@@ -56,7 +60,7 @@ fun CustomLocationDetails(
                 onMarkerUpdated(updatedMarker)
             }
         ) {
-            Text("Save Notes")
+            Text(text ="Save Notes", fontSize = fontSize.sp)
         }
 
         if (isUpdateDialogVisible) {
