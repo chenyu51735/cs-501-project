@@ -105,8 +105,9 @@ fun AppNavigation(navController: NavHostController, userViewModel: UserViewModel
                         val result = Uri.encode(gson.toJson(updatedMarker))
                         previousBackStackEntry.savedStateHandle["updatedCustomMarker"] = result
                         navController.popBackStack()
-                    }
-                )
+                    },
+                    navController = navController,
+                    )
             } else {
                 Text("Error: Custom marker data not found.")
             }
