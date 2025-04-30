@@ -68,12 +68,6 @@ fun LocationScreen(
     val gson = Gson()
     val context = LocalContext.current
 
-    val navBackStackEntry = navController.currentBackStackEntry // getting the username from the login form nav
-    val initialUsername = remember { // storing from argument into separate val so it survives nav changes
-        navBackStackEntry?.arguments?.getString("username") ?: ""
-    }
-    val username = remember { mutableStateOf(initialUsername) }
-    Log.d("LocationScreen", "Username is: ${username.value}")
 
     val fontSize = settingsViewModel.fontSize.collectAsState().value
     // state variables to track whether or not location permissions have been granted
@@ -100,6 +94,7 @@ fun LocationScreen(
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val currentCity by locationViewModel.currentCity.collectAsState()
     val customMarkers by locationViewModel.customMarkers.collectAsState()
+    val currentUsername = locationViewModel.currentUsername
 
     val historicalMarkerPoints = remember(historicalPlaces) { // these are the predefined suggestions markers
         derivedStateOf { // using derived state of to stabilize these values
@@ -171,7 +166,7 @@ fun LocationScreen(
                 }
                 item {
                     Text(
-                        text = "Welcome to $currentCity, ${username.value}",
+                        text = "Welcome to $currentCity, $currentUsername!",
                         fontSize = fontSize.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
