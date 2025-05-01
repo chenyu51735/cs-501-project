@@ -3,14 +3,16 @@ package com.example.cs501_project.data.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.example.cs501_project.model.CustomMarker
-import com.example.cs501_project.model.User
 import com.example.cs501_project.model.HistoricalPlace
+import com.example.cs501_project.model.Note
+import com.example.cs501_project.model.User
 
-@Database(entities = [User::class, HistoricalPlace::class, CustomMarker::class], version = 2)
+@Database(entities = [User::class, HistoricalPlace::class, CustomMarker::class, Note::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun historicalPlaceDao(): HistoricalPlaceDao
     abstract fun customMarkerDao(): CustomMarkerDao
+    abstract fun noteDao(): NoteDao
 
     companion object {
         @Volatile

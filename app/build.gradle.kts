@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.gson)
     implementation(libs.play.services.maps)
+    implementation(libs.androidx.compose.material3)
     kapt(libs.androidx.room.compiler)
     implementation(libs.coil.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -96,18 +95,19 @@ fun AppNavigation(navController: NavHostController, userViewModel: UserViewModel
 
             if (!customMarkerJson.isNullOrEmpty()) {
                 val customMarker = gson.fromJson(customMarkerJson, CustomMapMarker::class.java)
-                val previousBackStackEntry = remember(navController.previousBackStackEntry) {
-                    navController.getBackStackEntry(navController.previousBackStackEntry?.destination?.route ?: "locationScreen")
-                }
+                val previousBackStackEntry = navController.previousBackStackEntry
+
                 CustomLocationDetails(
                     marker = customMarker,
                     onMarkerUpdated = { updatedMarker ->
                         val result = Uri.encode(gson.toJson(updatedMarker))
-                        previousBackStackEntry.savedStateHandle["updatedCustomMarker"] = result
+                        previousBackStackEntry?.savedStateHandle?.set("updatedCustomMarker", result)
                         navController.popBackStack()
                     },
+                    navController = navController,
+                    viewModel = locationViewModel,
                     settingsViewModel = settingsViewModel
-                )
+                    )
             } else {
                 Text("Error: Custom marker data not found.")
             }

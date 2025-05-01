@@ -30,6 +30,7 @@ storage = "1.5.0"
 navigationCompose = "2.8.9"
 playServicesMaps = "19.1.0"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
+composeMaterial3 = "1.0.0-alpha37"
 workRuntimeKtx = "2.10.1"
 
 [libraries]
@@ -72,6 +73,7 @@ androidx-annotation = { group = "androidx.annotation", name = "annotation", vers
 androidx-storage = { group = "androidx.test.services", name = "storage", version.ref = "storage" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+androidx-compose-material3 = { group = "androidx.wear.compose", name = "compose-material3", version.ref = "composeMaterial3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
