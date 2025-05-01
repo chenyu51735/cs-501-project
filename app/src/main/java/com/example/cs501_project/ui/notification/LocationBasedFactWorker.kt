@@ -1,6 +1,5 @@
 package com.example.cs501_project.ui.notification
 
-import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
@@ -8,7 +7,6 @@ import androidx.work.WorkerParameters
 import com.example.cs501_project.data.database.HistoricalPlaceRepository
 import com.example.cs501_project.location.LocationService
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.forEach
 
 class LocationBasedFactWorker(
     context: Context,
@@ -30,8 +28,8 @@ class LocationBasedFactWorker(
     private suspend fun triggerNotificationsForNearbyPlaces() {
         val historicalPlaces = HistoricalPlaceRepository.getHistoricalPlaces()
         historicalPlaces.collectLatest { place ->
-            notificationHandler.showFactNotification(place[0])
-            Log.d("LocationBasedFactWorker", place[0].historicalFacts!!.toString())
+            notificationHandler.showFactNotification(place[1])
+            Log.d("LocationBasedFactWorker", place[1].historicalFacts!!.toString())
         }
 
     }

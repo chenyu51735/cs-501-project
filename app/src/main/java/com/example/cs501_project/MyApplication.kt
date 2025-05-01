@@ -38,26 +38,16 @@ class MyApplication : Application() {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val oneTimeWorkRequest = OneTimeWorkRequestBuilder<LocationBasedFactWorker>()
-            .setConstraints(constraints)
-            .build()
-
-        /**
         val periodicWorkRequest = PeriodicWorkRequestBuilder<LocationBasedFactWorker>(
             15, TimeUnit.MINUTES
         )
             .setConstraints(constraints)
             .build()
-        **/
 
-        WorkManager.getInstance(applicationContext).enqueue(oneTimeWorkRequest)
-
-        /**
-        enqueueOneTimePeriodicWork(
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             "locationBasedFactWork",
             ExistingPeriodicWorkPolicy.UPDATE,
-            oneTimeWorkRequest
+            periodicWorkRequest
         )
-        **/
     }
 }

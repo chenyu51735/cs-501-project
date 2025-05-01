@@ -6,7 +6,6 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.cs501_project.R
 import com.example.cs501_project.model.HistoricalPlace
-import com.example.cs501_project.viewmodel.LocationViewModel
 import kotlin.random.Random
 
 // notification handler defines how the user can handle the notification after they receive it
@@ -20,8 +19,6 @@ class NotificationHandler(
     fun showFactNotification(place: HistoricalPlace) {
         Log.d("Notification Handler", "showFactNotification() called")
         try {
-            //val facts = locationViewModel.historicalPlaces.value[0].historicalFacts[0]
-            //val title = locationViewModel.historicalPlaces.value[0].geoSearchResult.title
             val title = place.title
             val fact = place.historicalFacts.toString()
             Log.d("Notification Handler", fact)
