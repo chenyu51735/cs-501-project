@@ -47,6 +47,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.cs501_project.model.Note
 import com.example.cs501_project.viewmodel.CustomMapMarker
 import com.example.cs501_project.viewmodel.LocationViewModel
+import com.example.cs501_project.viewmodel.SettingsViewModel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -61,14 +62,15 @@ fun CustomLocationDetails(
     marker: CustomMapMarker,
     onMarkerUpdated: (CustomMapMarker) -> Unit, // callback to send marker back
     navController: NavHostController,
-    viewModel: LocationViewModel
+    viewModel: LocationViewModel,
+    settingsViewModel: SettingsViewModel
 ) {
     var isUpdateDialogVisible by remember { mutableStateOf(false) }
     var newNote by remember { mutableStateOf("") }
     val markerId = marker.point.toString()
     val notes by viewModel.getNotesForMarker(markerId).collectAsState()
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
-
+    val fontSize = settingsViewModel.fontSize.collectAsState().value.sp
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
 
@@ -92,7 +94,7 @@ fun CustomLocationDetails(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(marker.title, fontSize = 20.sp, fontWeight = FontWeight.Bold) },
+                title = { Text(marker.title, fontSize = fontSize, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -190,7 +192,7 @@ fun CustomLocationDetails(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Your Notes", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+            Text("Your Notes", fontWeight = FontWeight.SemiBold, fontSize = fontSize)
 
             // List of notes
             LazyColumn(

@@ -105,7 +105,8 @@ fun AppNavigation(navController: NavHostController, userViewModel: UserViewModel
                         navController.popBackStack()
                     },
                     navController = navController,
-                    viewModel = locationViewModel
+                    viewModel = locationViewModel,
+                    settingsViewModel = settingsViewModel
                     )
             } else {
                 Text("Error: Custom marker data not found.")
