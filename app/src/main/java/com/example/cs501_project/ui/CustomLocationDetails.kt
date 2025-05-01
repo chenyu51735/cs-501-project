@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,25 +30,29 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.listSaver
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.wear.compose.material3.TextButton
 import coil.compose.rememberAsyncImagePainter
+import com.example.cs501_project.model.Note
 import com.example.cs501_project.viewmodel.CustomMapMarker
+import com.example.cs501_project.viewmodel.LocationViewModel
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
-data class NoteEntry(val note: String, val date: String, val photoUri: Uri? = null)
 
 // when a user clicks on the card of their own custom marked location, lead them to this screen
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,29 +60,32 @@ data class NoteEntry(val note: String, val date: String, val photoUri: Uri? = nu
 fun CustomLocationDetails(
     marker: CustomMapMarker,
     onMarkerUpdated: (CustomMapMarker) -> Unit, // callback to send marker back
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: LocationViewModel
 ) {
     var isUpdateDialogVisible by remember { mutableStateOf(false) }
     var newNote by remember { mutableStateOf("") }
-    val notesState = rememberSaveable(
-        stateSaver = listSaver(
-            save = { notes ->
-                notes.flatMap { listOf(it.note, it.date, it.photoUri?.toString() ?: "") }
-            },
-            restore = { flatList ->
-                flatList.chunked(3).map { chunk ->
-                    NoteEntry(chunk[0], chunk[1], if (chunk[2].isNotEmpty()) Uri.parse(chunk[2]) else null)
-                }
-            }
-        )
-    ) { mutableStateOf(emptyList<NoteEntry>()) }
-    val notes = notesState.value
-
+    val markerId = marker.point.toString()
+    val notes by viewModel.getNotesForMarker(markerId).collectAsState()
+    var noteToDelete by remember { mutableStateOf<Note?>(null) }
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
 
+    // Image saving
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        selectedImageUri = uri
+        uri?.let {
+            // Copy image to internal storage
+            val fileName = "note_image_${System.currentTimeMillis()}.jpg"
+            val inputStream: InputStream? = context.contentResolver.openInputStream(it)
+            val outputFile = File(context.filesDir, fileName)
+            inputStream?.use { input ->
+                FileOutputStream(outputFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            selectedImageUri = Uri.fromFile(outputFile)
+        }
     }
 
     // Back bar
@@ -155,8 +163,12 @@ fun CustomLocationDetails(
                     onClick = {
                         if (newNote.isNotBlank()) {
                             val currentDate = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
-                            val newEntry = NoteEntry(newNote, currentDate, selectedImageUri)
-                            notesState.value = notes + newEntry
+                            viewModel.addNote(
+                                markerId = markerId,
+                                noteText = newNote,
+                                date = currentDate,
+                                photoUri = selectedImageUri?.toString()
+                            )
                             newNote = ""
                             selectedImageUri = null
                         }
@@ -190,14 +202,27 @@ fun CustomLocationDetails(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                     ) {
-                        Text(text = entry.date, style = MaterialTheme.typography.labelSmall)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = entry.note)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = entry.date, style = MaterialTheme.typography.labelSmall)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = entry.noteText)
+                            }
+
+                            IconButton(onClick = { noteToDelete = entry }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete Note")
+                            }
+                        }
+
 
                         entry.photoUri?.let { uri ->
                             Spacer(modifier = Modifier.height(8.dp))
                             Image(
-                                painter = rememberAsyncImagePainter(uri),
+                                painter = rememberAsyncImagePainter(Uri.parse(uri)),
                                 contentDescription = "Attached photo",
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -207,6 +232,29 @@ fun CustomLocationDetails(
                     }
                 }
             }
+            noteToDelete?.let { note ->
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { noteToDelete = null },
+                    title = { Text("Delete Note") },
+                    text = { Text("Are you sure you want to delete this note?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.deleteNote(note)
+                                noteToDelete = null
+                            }
+                        ) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { noteToDelete = null }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
         }
     }
     if (isUpdateDialogVisible) {

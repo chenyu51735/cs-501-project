@@ -15,17 +15,16 @@ import com.example.cs501_project.data.database.AppDatabase
 import com.example.cs501_project.location.LocationService
 import com.example.cs501_project.model.CustomMarker
 import com.example.cs501_project.model.HistoricalPlace
-import com.mapbox.common.toValue
+import com.example.cs501_project.model.Note
 import com.mapbox.geojson.Point
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 // this data class will map the geosearch result (historical place) with the url of an image of it
@@ -57,6 +56,8 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     val currentLocation: StateFlow<Location?> = locationService.currentLocation
     // gemini api instance
     private val geminiApi = GeminiApi()
+    // Notedao
+    private val noteDao = AppDatabase.getDatabase(application).noteDao()
 
     // custom map markers
     private val _customMarkers = MutableStateFlow<List<CustomMapMarker>>(emptyList())
@@ -72,10 +73,37 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         loadCustomMarkers()
         loadUsername()
     }
+    fun getNotesForMarker(markerId: String): StateFlow<List<Note>> {
+        return noteDao.getNotes(markerId)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
+    }
+
+    fun addNote(markerId: String, noteText: String, date: String, photoUri: String?) {
+        viewModelScope.launch {
+            val note = Note(
+                markerId = markerId,
+                noteText = noteText,
+                date = date,
+                photoUri = photoUri
+            )
+            noteDao.insert(note)
+        }
+    }
+
+    fun deleteNote(note: Note) {
+        viewModelScope.launch {
+            noteDao.delete(note)
+        }
+    }
 
     private fun loadUsername() {
         viewModelScope.launch {
-            currentUsername = userDao.getUsernameFromUserId(1).username
+            val user = userDao.getUsernameFromUserId(1)
+            currentUsername = user?.username ?: "Guest"
         }
     }
 
@@ -250,5 +278,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     suspend fun markHistoricalPlaceAsNotified(placeId: String) {
         historicalPlaceDao.markAsNotifiedForUser(placeId, currentUserId)
     }
+
 }
 
