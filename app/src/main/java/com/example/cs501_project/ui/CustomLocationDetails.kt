@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -37,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -73,7 +76,8 @@ fun CustomLocationDetails(
     val fontSize = settingsViewModel.fontSize.collectAsState().value.sp
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
-
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
     // Image saving
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -103,137 +107,255 @@ fun CustomLocationDetails(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(16.dp)
-        )
-        {
-
-            // Edit button
-            Button(
-                onClick = { isUpdateDialogVisible = true },
+        if (screenWidthDp < 600) {
+            // Phone view
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
-                shape = MaterialTheme.shapes.medium
+                    .padding(paddingValues)
+                    .padding(16.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit Marker",
-                    modifier = Modifier.padding(end = 8.dp)
+                // Edit button
+                Button(
+                    onClick = { isUpdateDialogVisible = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    elevation = ButtonDefaults.buttonElevation(4.dp),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit Marker", modifier = Modifier.padding(end = 8.dp))
+                    Text("Edit Title or Symbol", fontWeight = FontWeight.Medium)
+                }
+
+                OutlinedTextField(
+                    value = newNote,
+                    onValueChange = { newNote = it },
+                    label = { Text("Add a new note") },
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Text("Edit Title or Symbol", fontWeight = FontWeight.Medium)
-            }
 
-
-            OutlinedTextField(
-                value = newNote,
-                onValueChange = { newNote = it },
-                label = { Text("Add a new note") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-
-                // Attach image button
-                Button(
-                    onClick = { imagePicker.launch("image/*") },
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
-                    shape = MaterialTheme.shapes.medium
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Attach Photo",
-                        modifier = Modifier.padding(end = 6.dp)
-                    )
-                    Text("Attach Photo")
-                }
-
-                // Save button
-                Button(
-                    onClick = {
-                        if (newNote.isNotBlank()) {
-                            val currentDate = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
-                            viewModel.addNote(
-                                markerId = markerId,
-                                noteText = newNote,
-                                date = currentDate,
-                                photoUri = selectedImageUri?.toString()
-                            )
-                            newNote = ""
-                            selectedImageUri = null
-                        }
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 4.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Save Note",
-                        modifier = Modifier.padding(end = 6.dp)
-                    )
-                    Text("Save Note")
-                }
-
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Your Notes", fontWeight = FontWeight.SemiBold, fontSize = fontSize)
-
-            // List of notes
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(notes) { entry ->
-                    Column(
+                    Button(
+                        onClick = { imagePicker.launch("image/*") },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                            .weight(1f)
+                            .padding(end = 4.dp),
+                        elevation = ButtonDefaults.buttonElevation(4.dp),
+                        shape = MaterialTheme.shapes.medium
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        Icon(Icons.Default.Add, contentDescription = "Attach Photo", modifier = Modifier.padding(end = 6.dp))
+                        Text("Attach Photo")
+                    }
+
+                    Button(
+                        onClick = {
+                            if (newNote.isNotBlank()) {
+                                val currentDate = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+                                viewModel.addNote(
+                                    markerId = markerId,
+                                    noteText = newNote,
+                                    date = currentDate,
+                                    photoUri = selectedImageUri?.toString()
+                                )
+                                newNote = ""
+                                selectedImageUri = null
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 4.dp),
+                        elevation = ButtonDefaults.buttonElevation(4.dp),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = "Save Note", modifier = Modifier.padding(end = 6.dp))
+                        Text("Save Note")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Your Notes", fontWeight = FontWeight.SemiBold, fontSize = fontSize)
+
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(notes) { entry ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = entry.date, style = MaterialTheme.typography.labelSmall)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = entry.noteText)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(entry.date, style = MaterialTheme.typography.labelSmall)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(entry.noteText)
+                                }
+
+                                IconButton(onClick = { noteToDelete = entry }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete Note")
+                                }
                             }
 
-                            IconButton(onClick = { noteToDelete = entry }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete Note")
+                            entry.photoUri?.let { uri ->
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Image(
+                                    painter = rememberAsyncImagePainter(Uri.parse(uri)),
+                                    contentDescription = "Attached photo",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                )
                             }
-                        }
-
-
-                        entry.photoUri?.let { uri ->
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Image(
-                                painter = rememberAsyncImagePainter(Uri.parse(uri)),
-                                contentDescription = "Attached photo",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(180.dp)
-                            )
                         }
                     }
                 }
             }
+        } else {
+            // Tablet view, left editing, right notes list
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // Left side: editing
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    Button(
+                        onClick = { isUpdateDialogVisible = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        elevation = ButtonDefaults.buttonElevation(4.dp),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Marker", modifier = Modifier.padding(end = 8.dp))
+                        Text("Edit Title or Symbol", fontWeight = FontWeight.Medium)
+                    }
+
+                    OutlinedTextField(
+                        value = newNote,
+                        onValueChange = { newNote = it },
+                        label = { Text("Add a new note") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    ) {
+                        Button(
+                            onClick = { imagePicker.launch("image/*") },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 4.dp),
+                            elevation = ButtonDefaults.buttonElevation(4.dp),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Attach Photo", modifier = Modifier.padding(end = 6.dp))
+                            Text("Attach Photo")
+                        }
+
+                        Button(
+                            onClick = {
+                                if (newNote.isNotBlank()) {
+                                    val currentDate = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+                                    viewModel.addNote(
+                                        markerId = markerId,
+                                        noteText = newNote,
+                                        date = currentDate,
+                                        photoUri = selectedImageUri?.toString()
+                                    )
+                                    newNote = ""
+                                    selectedImageUri = null
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 4.dp),
+                            elevation = ButtonDefaults.buttonElevation(4.dp),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = "Save Note", modifier = Modifier.padding(end = 6.dp))
+                            Text("Save Note")
+                        }
+                    }
+                }
+                // Right side: note list
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    // "Your Notes" label at top-right
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text("Your Notes", fontWeight = FontWeight.SemiBold, fontSize = fontSize)
+                    }
+
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(notes) { entry ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            entry.date, style = MaterialTheme.typography.labelSmall
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(entry.noteText)
+                                    }
+
+                                    IconButton(onClick = { noteToDelete = entry }) {
+                                        Icon(
+                                            Icons.Default.Delete, contentDescription = "Delete Note"
+                                        )
+                                    }
+                                }
+
+                                entry.photoUri?.let { uri ->
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Image(
+                                        painter = rememberAsyncImagePainter(Uri.parse(uri)),
+                                        contentDescription = "Attached photo",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(180.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Delete confirmation popup
             noteToDelete?.let { note ->
                 androidx.compose.material3.AlertDialog(
                     onDismissRequest = { noteToDelete = null },
@@ -257,17 +379,17 @@ fun CustomLocationDetails(
                 )
             }
 
+            if (isUpdateDialogVisible) {
+                CustomMarkerDialog(
+                    onDismissRequest = { isUpdateDialogVisible = false },
+                    onConfirm = { newTitle, newSymbol ->
+                        val updated = marker.copy(title = newTitle, symbol = "$newSymbol.png")
+                        onMarkerUpdated(updated)
+                        isUpdateDialogVisible = false
+                    },
+                    existingMarker = marker
+                )
+            }
         }
-    }
-    if (isUpdateDialogVisible) {
-        CustomMarkerDialog(
-            onDismissRequest = { isUpdateDialogVisible = false },
-            onConfirm = { newTitle, newSymbol ->
-                val updated = marker.copy(title = newTitle, symbol = "$newSymbol.png")
-                onMarkerUpdated(updated)
-                isUpdateDialogVisible = false
-            },
-            existingMarker = marker
-        )
     }
 }
