@@ -54,6 +54,7 @@ android {
 
 dependencies {
     implementation(libs.accompanist.permissions.v0311alpha)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.android)
     implementation(libs.generativeai)
     implementation(libs.maps.compose)
