@@ -91,13 +91,17 @@ fun LocationScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         )
     }
+    var hasBackgroundLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
     // permission for posting notification
     var hasNotificationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         )
     }
-    val notificationHandler = NotificationHandler(context, locationViewModel)
 
     // observes state flows from the viewmodel and updates ui when a new location is received
     val historicalPlaces by locationViewModel.historicalPlaces.collectAsState()
@@ -131,6 +135,7 @@ fun LocationScreen(
             hasFineLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
             hasCoarseLocationPermission = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
             hasNotificationPermission = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
+            hasBackgroundLocationPermission = permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
         }
     )
 
@@ -168,12 +173,6 @@ fun LocationScreen(
             verticalArrangement = Arrangement.Center
         ) {
             if (currentLocation != null) {
-                // testing the notification
-                item {
-                    Button(onClick = {
-                        notificationHandler.showFactNotification()
-                    }) { Text(text = "Get a fact") }
-                }
                 item {
                     Text(
                         text = "Welcome to $currentCity, $currentUsername!",
