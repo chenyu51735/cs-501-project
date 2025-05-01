@@ -65,7 +65,6 @@ fun CustomLocationDetails(
     viewModel: LocationViewModel,
     settingsViewModel: SettingsViewModel
 ) {
-    val fontSize = settingsViewModel.fontSize.collectAsState().value
     var isUpdateDialogVisible by remember { mutableStateOf(false) }
     var newNote by remember { mutableStateOf("") }
     val markerId = marker.point.toString()
