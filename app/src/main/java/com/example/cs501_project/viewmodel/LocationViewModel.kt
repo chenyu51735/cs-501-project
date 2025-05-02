@@ -215,6 +215,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private fun fetchNearbyHistoricalPlaces(latitude: Double, longitude: Double) {
         viewModelScope.launch {
             try {
+                historicalPlaceDao.deleteAllHistoricalPlacesForUser(currentUserId)
                 val coordinates = "${latitude}|${longitude}"
                 val response = WikiClient.wikiApi.searchNearbyHistoricalPlaces(coordinates)
                 val places = response.query?.geosearch ?: emptyList()
