@@ -280,9 +280,10 @@ fun LocationScreen(
                                         Spacer(modifier = Modifier.width(8.dp))
                                     }
                                     Column {
+                                        val placeLoc = locationViewModel.getStreetAddressFromCoordinates(place.geoSearchResult.lat, place.geoSearchResult.lon)
                                         Text(place.geoSearchResult.title, fontSize = fontSize.sp)
                                         Text(
-                                            "Distance from you: ${place.geoSearchResult.dist}",
+                                            "Address: $placeLoc",
                                             fontSize = fontSize.sp
                                         )
                                     }
@@ -387,12 +388,13 @@ fun LocationScreen(
                                             Spacer(modifier = Modifier.width(8.dp))
                                         }
                                         Column {
+                                            val placeLoc = locationViewModel.getStreetAddressFromCoordinates(place.geoSearchResult.lat, place.geoSearchResult.lon)
                                             Text(
                                                 place.geoSearchResult.title,
                                                 fontSize = fontSize.sp
                                             )
                                             Text(
-                                                "Distance from you: ${place.geoSearchResult.dist}",
+                                                "Address: $placeLoc",
                                                 fontSize = fontSize.sp
                                             )
                                         }

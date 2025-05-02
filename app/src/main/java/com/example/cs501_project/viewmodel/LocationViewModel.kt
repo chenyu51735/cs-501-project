@@ -204,8 +204,8 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                     // location is already being updated in _currentLocation in LocationService
                     if (location != null) {
                         fetchNearbyHistoricalPlaces(location.latitude, location.longitude)
-                        val cityName = reverseGeocode(getApplication(), location.latitude, location.longitude)
-                        _currentCity.value = cityName.toString()
+                        val cityName = getCityFromCoordinates(location.latitude, location.longitude)
+                        _currentCity.value = cityName
                     }
                 }
         }
@@ -266,7 +266,19 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         return try {
             val addresses: List<Address>? = geocoder.getFromLocation(latitude, longitude, 1)
             if (!addresses.isNullOrEmpty()) {
-                addresses[0].locality
+                val address = addresses[0]
+
+                val addressParts = with(address) {
+                    listOfNotNull(
+                        thoroughfare, // street name
+                        subThoroughfare, // street number
+                        locality,      // city
+                        adminArea,     // state/province
+                        postalCode,    // postal code
+                        countryName    // country
+                    )
+                }
+                addressParts.joinToString(", ")
             } else {
                 null
             }
@@ -274,6 +286,17 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             e.printStackTrace()
             null
         }
+    }
+
+    // to get street address of each suggested location
+    fun getStreetAddressFromCoordinates(latitude: Double, longitude: Double): String? {
+        return reverseGeocode(getApplication(), latitude, longitude)
+    }
+
+    // for current city display purposes
+    private fun getCityFromCoordinates(latitude: Double, longitude: Double): String {
+        val fullAddress = reverseGeocode(getApplication(), latitude, longitude)
+        return fullAddress!!.split(",")[2].trim()
     }
 
     suspend fun markHistoricalPlaceAsNotified(placeId: String) {
