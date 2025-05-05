@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.example.cs501_project.data.database.HistoricalPlaceRepository
 import com.example.cs501_project.location.LocationService
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.random.Random
 
 class LocationBasedFactWorker(
     context: Context,
@@ -15,6 +16,7 @@ class LocationBasedFactWorker(
     private val locationService = LocationService(context)
     private val notificationHandler = NotificationHandler(context)
 
+    // gathers location to start doing work
     override suspend fun doWork(): Result {
         locationService.getLocationUpdates()
             .collectLatest { location ->
@@ -25,12 +27,14 @@ class LocationBasedFactWorker(
         return Result.success()
     }
 
+    // selects a random place from the historical place repository based on location to show a fact
     private suspend fun triggerNotificationsForNearbyPlaces() {
         val historicalPlaces = HistoricalPlaceRepository.getHistoricalPlaces()
         Log.d("LocationBasedFactWorker", historicalPlaces.toString())
         historicalPlaces.collectLatest { place ->
-            notificationHandler.showFactNotification(place[0])
-            Log.d("LocationBasedFactWorker", place[0].historicalFacts!!.toString())
+            val max = place.size - 1
+            val idx = Random.nextInt(0, max)
+            notificationHandler.showFactNotification(place[idx])
         }
 
     }
