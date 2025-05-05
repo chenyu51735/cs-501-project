@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.callbackFlow
 // encapsulates all the logic needed for accessing device's location
 // and provides it as a Flow of updates so it processes as the info comes
 
-// work manager here
 class LocationService(private val context: Context) {
 
     private val fusedLocationClient: FusedLocationProviderClient by lazy {

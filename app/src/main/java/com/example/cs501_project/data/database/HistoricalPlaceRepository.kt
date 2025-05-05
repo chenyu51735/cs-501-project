@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.cs501_project.model.HistoricalPlace
 import kotlinx.coroutines.flow.Flow
 
+// will store all the historical places for access in notification logic
 object HistoricalPlaceRepository {
     private var database: AppDatabase? = null
 

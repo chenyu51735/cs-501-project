@@ -1,6 +1,7 @@
 package com.example.cs501_project.ui
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -114,6 +115,7 @@ fun CustomLocationDetails(
                     .padding(paddingValues)
                     .padding(16.dp)
             ) {
+                Log.d("CustomLocationDetails", isUpdateDialogVisible.toString())
                 // Edit button
                 Button(
                     onClick = { isUpdateDialogVisible = true },
@@ -123,6 +125,7 @@ fun CustomLocationDetails(
                     elevation = ButtonDefaults.buttonElevation(4.dp),
                     shape = MaterialTheme.shapes.medium
                 ) {
+                    Log.d("CustomLocationDetails", isUpdateDialogVisible.toString())
                     Icon(Icons.Default.Edit, contentDescription = "Edit Marker", modifier = Modifier.padding(end = 8.dp))
                     Text("Edit Title or Symbol", fontWeight = FontWeight.Medium)
                 }
@@ -216,6 +219,42 @@ fun CustomLocationDetails(
                             }
                         }
                     }
+                }
+
+                // Delete confirmation popup
+                noteToDelete?.let { note ->
+                    androidx.compose.material3.AlertDialog(
+                        onDismissRequest = { noteToDelete = null },
+                        title = { Text("Delete Note") },
+                        text = { Text("Are you sure you want to delete this note?") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    viewModel.deleteNote(note)
+                                    noteToDelete = null
+                                }
+                            ) {
+                                Text("Delete")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { noteToDelete = null }) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
+                }
+
+                if (isUpdateDialogVisible) {
+                    CustomMarkerDialog(
+                        onDismissRequest = { isUpdateDialogVisible = false },
+                        onConfirm = { newTitle, newSymbol ->
+                            val updated = marker.copy(title = newTitle, symbol = "$newSymbol.png")
+                            onMarkerUpdated(updated)
+                            isUpdateDialogVisible = false
+                        },
+                        existingMarker = marker
+                    )
                 }
             }
         } else {

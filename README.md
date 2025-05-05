@@ -15,10 +15,13 @@ We want our app to make travel more engaging and culturally rich through leverag
 ## Multi-Device
 - Smartphones
 - Tablets
-## Wireframe
+## Wireframe Vision
 - Smartphone
 <img width="714" alt="image" src="https://github.com/user-attachments/assets/d5fd9609-8d3f-4f6e-afb9-c1fbc168abd0" />
-
+## Next Steps
+- Better notification integration through periodic work requests
+- Improvements to UI/UX
+- Photo gallery for each location based on user-uploaded images
 ## Collaborators
 - Sukie Zhang (sukiez@bu.edu)
 - Yu Chen (kane@bu.edu)
