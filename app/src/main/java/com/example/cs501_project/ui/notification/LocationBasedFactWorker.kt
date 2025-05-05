@@ -27,9 +27,10 @@ class LocationBasedFactWorker(
 
     private suspend fun triggerNotificationsForNearbyPlaces() {
         val historicalPlaces = HistoricalPlaceRepository.getHistoricalPlaces()
+        Log.d("LocationBasedFactWorker", historicalPlaces.toString())
         historicalPlaces.collectLatest { place ->
-            notificationHandler.showFactNotification(place[1])
-            Log.d("LocationBasedFactWorker", place[1].historicalFacts!!.toString())
+            notificationHandler.showFactNotification(place[0])
+            Log.d("LocationBasedFactWorker", place[0].historicalFacts!!.toString())
         }
 
     }
