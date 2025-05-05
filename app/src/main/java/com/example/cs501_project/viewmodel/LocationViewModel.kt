@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-// this data class will map the geosearch result (historical place) with the url of an image of it
+// this data class will map the geo search result (historical place) with the url of an image of it
 data class HistoricalPlaceWithImage(
     // historical location suggestions as GeoSearchResult
     val geoSearchResult: GeoSearchResult,
@@ -56,7 +56,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     val currentLocation: StateFlow<Location?> = locationService.currentLocation
     // gemini api instance
     private val geminiApi = GeminiApi()
-    // Notedao
+    // noteDao
     private val noteDao = AppDatabase.getDatabase(application).noteDao()
 
     // custom map markers
@@ -103,7 +103,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private fun loadUsername() {
         viewModelScope.launch {
             val user = userDao.getUsernameFromUserId(1)
-            currentUsername = user?.username ?: "Guest"
+            currentUsername = user.username
         }
     }
 
@@ -234,7 +234,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                     var facts: String? = null
                     try {
                         val geminiResponse = geminiApi.getHistoricalFacts(place.title)
-                        Log.d("LocationViewModel", "API response: $geminiResponse")
                         facts = geminiResponse?.split(".")?.filter { it.isNotBlank() }?.joinToString(".")
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -242,7 +241,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
                     val historicalPlaceEntity = HistoricalPlace(
                         userId = currentUserId,
-                        placeId = place.pageid.toString(), // use pageid as a stable ID
+                        placeId = place.pageid.toString(), // use pageId as a stable ID
                         title = place.title,
                         latitude = place.lat,
                         longitude = place.lon,
@@ -298,10 +297,5 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         val fullAddress = reverseGeocode(getApplication(), latitude, longitude)
         return fullAddress!!.split(",")[2].trim()
     }
-
-    suspend fun markHistoricalPlaceAsNotified(placeId: String) {
-        historicalPlaceDao.markAsNotifiedForUser(placeId, currentUserId)
-    }
-
 }
 

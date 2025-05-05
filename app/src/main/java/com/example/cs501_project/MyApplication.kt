@@ -3,15 +3,12 @@ package com.example.cs501_project
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.util.Log
 import androidx.work.Constraints
 import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.*
 import com.example.cs501_project.data.database.AppDatabase
 import com.example.cs501_project.data.database.HistoricalPlaceRepository
 import com.example.cs501_project.ui.notification.LocationBasedFactWorker
-import java.util.concurrent.TimeUnit
 
 class MyApplication : Application() {
     override fun onCreate() {
@@ -33,7 +30,6 @@ class MyApplication : Application() {
     }
 
     private fun scheduleLocationBasedFactWorker() {
-        Log.d("MyApplication", "scheduleLocationBasedFactWorker() CALLED")
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()

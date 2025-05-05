@@ -17,11 +17,9 @@ class NotificationHandler(
     private val notificationChannelId = "historical_facts_channel" // unique identifier for channel
 
     fun showFactNotification(place: HistoricalPlace) {
-        Log.d("Notification Handler", "showFactNotification() called")
         try {
             val title = place.title
             val fact = place.historicalFacts.toString()
-            Log.d("Notification Handler", fact)
             val notification = NotificationCompat.Builder(context, notificationChannelId)
                 .setContentTitle("Did you know this about $title?")
                 .setContentText(fact)

@@ -30,7 +30,6 @@ class LocationBasedFactWorker(
     // selects a random place from the historical place repository based on location to show a fact
     private suspend fun triggerNotificationsForNearbyPlaces() {
         val historicalPlaces = HistoricalPlaceRepository.getHistoricalPlaces()
-        Log.d("LocationBasedFactWorker", historicalPlaces.toString())
         historicalPlaces.collectLatest { place ->
             val max = place.size - 1
             val idx = Random.nextInt(0, max)
