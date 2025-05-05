@@ -393,6 +393,7 @@ fun LocationScreen(
                                                 place.geoSearchResult.title,
                                                 fontSize = fontSize.sp
                                             )
+                                            Spacer(modifier = Modifier.width(2.dp))
                                             Text(
                                                 "Address: $placeLoc",
                                                 fontSize = fontSize.sp
