@@ -13,13 +13,14 @@ We want our app to make travel more engaging and culturally rich through leverag
 - GPS for location-based filtering
 - Camera for photo uploads
 ## Multi-Device
-- Smartphones
-- Tablets
+- Smartphone
+- Tablet
 ## Wireframe Vision
 - Smartphone
 <img width="714" alt="image" src="https://github.com/user-attachments/assets/d5fd9609-8d3f-4f6e-afb9-c1fbc168abd0" />
+
 ## Next Steps
-- Better notification integration through periodic work requests
+- Better notification integration through periodic work requests instead of one-time work requests
 - Improvements to UI/UX
 - Photo gallery for each location based on user-uploaded images
 ## Collaborators
